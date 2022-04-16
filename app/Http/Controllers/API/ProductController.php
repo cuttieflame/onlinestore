@@ -26,6 +26,7 @@ class ProductController extends Controller
         return response()->json('abc');
         return response()->json('abc');
         return response()->json('abc');
+        dd('123');
 
     }
     public function create($id)
