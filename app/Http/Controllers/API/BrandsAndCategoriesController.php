@@ -10,9 +10,13 @@ use Illuminate\Http\Request;
 class BrandsAndCategoriesController extends Controller
 {
     public function index() {
-        $categories = \DB::table('categories')->select(['id','title'])->get();
-        $brands = \DB::table('brands')->select(['id','title'])->get();
-        $categories->merge($brands);
-        return response()->json(['categories'=>$categories,'brands'=>$brands]);
+        $categories = \Cache::remember('categories', '14400', function () {
+            return \DB::table('categories')->orderBy('id')->select(['id','title'])->get();
+        });
+        $brands = \Cache::remember('brands', '14400', function () {
+            return \DB::table('brands')->orderBy('id')->select(['id','title'])->get();
+        });
+        $crct = ['categories'=>$categories,'brands'=>$brands];
+        return response()->json(['crct'=>$crct]);
     }
 }

@@ -11,5 +11,9 @@ class Brand extends Model
     protected $fillable = [
         'title'
     ];
+    public function subbrand()
+    {
+        return $this->hasMany(Brand::class, 'parent_id');
+    }
 
 }

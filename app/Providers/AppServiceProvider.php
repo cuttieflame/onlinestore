@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Http\Resources\Json\JsonResource;
 use Laravel\Sanctum\Sanctum;
 use App\Models\PersonalAccessToken;
 use App\Models\Product;
@@ -24,17 +25,12 @@ class AppServiceProvider extends ServiceProvider
             PersonalAccessToken::class
         );
         $this->app->register(RepositoryServiceProvider::class);
-
     }
-
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
     public function boot()
     {
         User::observe(UserObserver::class);
-        Product::observe(ProductObserver::class);
+//        JsonResource::withoutWrapping();
+
+//        Product::observe(ProductObserver::class);
     }
 }

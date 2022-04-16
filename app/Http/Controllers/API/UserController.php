@@ -15,7 +15,8 @@ class UserController extends Controller
     {
         $id = auth()->id();
         $user = UserIndexService::getUser($id);
-        return response()->json(['data'=>[$user]]);
+        session(['user_id' => $id]);
+        return response()->json(['data'=>$user]);
     }
     public function create()
     {
@@ -36,18 +37,18 @@ class UserController extends Controller
     }
     public function update(UserAccountRequest $request, $id)
     {
-        $validated = $request->validated();
-        $user = User::findOrFail($id);
-        $user->name = $request->input('name');
-        $user->email = $request->input('email');
-        $user->account_details->first_name = $request->input('first_name');
-        $user->account_details->last_name = $request->input('last_name');
-        $user->account_details->organization = $request->input('organization');
-        $user->account_details->location = $request->input('location');
-        $user->account_details->phone = $request->input('phone');
-        $user->account_details->birthday = $request->input('birthday');
-        $user->save(array_slice($validated,0,2));
-        $user->account_details->save(array_slice($validated,2));
+//        $validated = $request->validated();
+//        $user = User::findOrFail($id);
+//        $user->name = $request->input('name');
+//        $user->email = $request->input('email');
+//        $user->account_details->first_name = $request->input('first_name');
+//        $user->account_details->last_name = $request->input('last_name');
+//        $user->account_details->organization = $request->input('organization');
+//        $user->account_details->location = $request->input('location');
+//        $user->account_details->phone = $request->input('phone');
+//        $user->account_details->birthday = $request->input('birthday');
+//        $user->save(array_slice($validated,0,2));
+//        $user->account_details->save(array_slice($validated,2));
     }
     public function destroy($id)
     {

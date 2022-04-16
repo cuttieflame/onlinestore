@@ -13,13 +13,17 @@ class BrandFactory extends Factory
      */
     public function definition()
     {
-        $brands_array = ['asus','toshiba','dell','viewsonic','sony','acer','genius','canon','epson','a4tech','HP','sven','philips','panasonic','defender',
-            'benq','palit','lenovo','nikon','amd','nvidia','kingston'];
-        foreach($brands_array as $brand) {
-            return [
-                'brand'=>$this->faker->firstNameFemale,
-            ];
+        $sks = [];
+        for ($i = 6; $i <= 342; $i++) {
+            array_push($sks,$i);
         }
-
+        $gvn = array_rand($sks,40);
+        $newgvn = array_unique($gvn);
+        $rndm = implode(",",$newgvn);
+            return [
+                'title' => $this->faker->lastName(),
+                'category_id'=>$i,
+                'categories'=>"[$rndm]",
+            ];
     }
 }

@@ -27,7 +27,7 @@ class Cart extends Model
         return $this->belongsTo('App\Models\User');
     }
     public function product() {
-        return $this->belongsTo('App\Models\Product');
+        return $this->hasMany('App\Products','id','product_id');
     }
 //    public function vars() {
 //        return $this->belongsToMany(config("cart.product_variant_model"), "cart_vars", "cart_id", "variant_id");

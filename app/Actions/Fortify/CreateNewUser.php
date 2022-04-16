@@ -2,22 +2,20 @@
 
 namespace App\Actions\Fortify;
 
+use App\Jobs\CreateNewUserAndSendMail;
+use App\Mail\MailAfterRegistration;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 use Laravel\Jetstream\Jetstream;
+use Mail;
 
 class CreateNewUser implements CreatesNewUsers
 {
     use PasswordValidationRules;
 
-    /**
-     * Validate and create a newly registered user.
-     *
-     * @param  array  $input
-     * @return \App\Models\User
-     */
+
     public function create(array $input)
     {
         Validator::make($input, [
@@ -26,10 +24,20 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $this->passwordRules(),
         ])->validate();
 
-        return User::create([
-            'name' => $input['name'],
-            'email' => $input['email'],
-            'password' => Hash::make($input['password']),
-        ]);
+        try {
+            return \DB::transaction(function () use ($input): void {
+                User::create([
+                    'name' => $input['name'],
+                    'email' => $input['email'],
+                    'password' => Hash::make($input['password']),
+                ]);
+                CreateNewUserAndSendMail::dispatch($input['email'],$input['name']);
+            }, 3);
+        } catch (ExternalServiceException $exception) {
+            return response()->json(['error'=>'Попробуйте позже']);
+        }
+
+
+
     }
 }

@@ -11,4 +11,6 @@ interface ProductRepositoryInterface
     public function getCategories();
     public function getProducts($id);
     public function myProducts(Product $product);
+
+    public function search(string $query = '');
 }

@@ -5,7 +5,8 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CartResource;
 use App\Http\Resources\ProductResource;
-use App\Models\Product;
+use App\Jobs\CartQuantity;
+use App\Products;
 use Illuminate\Http\Request;
 use App\Models\Cart;
 use Carbon\Carbon;
@@ -23,7 +24,7 @@ class CartController extends Controller
     }
 
     public static function get() {
-        $products = Cart::with(['product:id,name,content,view_count,main_image,price'])
+        $products = Cart::with(['product'])
             ->where(["session_id" => session()->getId()])
             ->get();
         $times = ["now"=>Carbon::now()->format('d.m.Y'),"not_now"=>Carbon::now()->addDays(2)->format('d.m.Y')];
@@ -31,7 +32,11 @@ class CartController extends Controller
 //      return response()->json(['products'=>new CartResource($products)]);
     }
     public static function add($product_id) {
-        $product = Product::findOrFail($product_id);
+        $product = Products::where('id',$product_id)
+            ->with(['attributesoptions' => function ($query) {
+                $query->select(['attribute_id','value','product_id'])->where('attribute_id',3);
+            }])
+            ->first();
 
         if($cart = Cart::where([
             "session_id" => session()->getId(),
@@ -39,28 +44,20 @@ class CartController extends Controller
         ])->first()) {
             $cart->increment("quantity");
             $cart->save();
-        } else {
+        }
+        else {
             $cart = Cart::create([
                 "session_id" => session()->getId(),
                 "product_id" => $product->id,
                 "user_id" => auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null,
-                "price" => $product->price,
+                "price" => $product->attributesoptions[0]->value,
             ]);
         }
         return $cart;
     }
     public static function quantity($id, $quantity,$value) {
         $cart = Cart::select(['id','quantity'])->findOrFail($id);
-        if($quantity == 'minus') {
-            $cart->decrement('quantity', 1);
-        }
-        if($quantity == 'plus') {
-            $cart->increment('quantity', 1);
-        }
-        if($quantity == 'change') {
-            $cart->quantity = $value;
-        }
-         $cart->save();
+        CartQuantity::dispatch($cart,$quantity,$value);
     }
     public static function remove($id) {
         return Cart::destroy($id);

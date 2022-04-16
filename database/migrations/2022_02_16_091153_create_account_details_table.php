@@ -21,6 +21,7 @@ class CreateAccountDetailsTable extends Migration
             $table->string('location',50);
             $table->string('phone',20);
             $table->date('birthday');
+            $table->string('customer_id',50)->nullable();
             $table->timestamps();
         });
     }
