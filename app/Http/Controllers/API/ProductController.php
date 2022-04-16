@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\DataTransferObjects\ProductData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductStoreRequest;
 use App\Models\Currency;
@@ -21,16 +22,6 @@ use Illuminate\Container\Container;
 
 class ProductController extends Controller
 {
-//    private $brand;
-//    public function __construct(Brand $brand)
-//    {
-//        $this->brand = $brand;
-//    }
-//    public function get() {
-//        return $this->brand->get();
-//    }
-
-
     public function index(Request $request)
     {
         $brands = \DB::table('brands')->select(['id','title'])->get();
@@ -99,7 +90,8 @@ class ProductController extends Controller
     }
     public function store(ProductStoreRequest $request)
     {
-        $options = ArrayOptionService::makeOptionArray($request);
+        $validated = ProductData::fromRequest($request);
+        $options = ArrayOptionService::makeOptionArray($validated);
         \DB::beginTransaction();
         try {
             $id = \DB::table('products')->insertGetId([
@@ -122,7 +114,7 @@ class ProductController extends Controller
         try {
             $pr_ctg = new ProductCategory();
             $pr_ctg->product_id = $id;
-            $pr_ctg->category_id = $request->input('category');
+            $pr_ctg->category_id = $validated->category;
 
             $pr_ctg->save();
         }
@@ -132,7 +124,7 @@ class ProductController extends Controller
         }
         try {
             $images = new Image();
-            $images->images = ImageToObjectArray::make($request->input('images'));
+            $images->images = ImageToObjectArray::make($validated->images);
             $images->product_id = $id;
             $images->save();
         }
@@ -144,7 +136,7 @@ class ProductController extends Controller
         try {
             $pr_price = new ProductPrice();
             $pr_price->id = $id;
-            $pr_price->price = $request->input('price');
+            $pr_price->price = $validated->price;
             $pr_price->save();
         }
         catch(\Exception $e)

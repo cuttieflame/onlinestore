@@ -23,10 +23,12 @@
         "laravel/tinker": "^2.5",
         "livewire/livewire": "^2.5",
         "socialiteproviders/vkontakte": "^4.2",
+        "spatie/data-transfer-object": "^3.7",
         "spatie/laravel-activitylog": "^4.5",
         "sunel/eav": "^0.3.1",
         "symfony/dom-crawler": "^6.0",
         "torann/geoip": "^3.0"
+
     },
     "require-dev": {
         "dragon-code/pretty-routes": "^3.1",
