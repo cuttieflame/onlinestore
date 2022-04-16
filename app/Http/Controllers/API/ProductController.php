@@ -22,25 +22,10 @@ class ProductController extends Controller
     }
     public function index()
     {
-        $currencies = \Cache::remember('currencies', '14400', function () {
-            return $this->productRepository->getCurrenciesForProducts();
-        });
-        $brands = \Cache::remember('brands', '14400', function () {
-            return $this->productRepository->getBrands();
-        });
-        $categories = \Cache::remember('categories', '14400', function () {
-            return $this->productRepository->getCategories();
-        });
-       $products = $this->productRepository->getProducts(100);
-       $product = $products->sortBy('id')->values()->slice(0,8);
-        $recently_viewed = $products->sortBy('view_count')->values()->slice(0,8);
-        $combined = $product->merge($recently_viewed);
-        foreach($combined as $product) {
-            $product['categories'] = $categories[$product->category_id]->title;
-            $product['brands'] = $brands[$product->brand_id - 1]->title;
-        }
-        $arr_ip = geoip()->getLocation(\Request::ip());
-        return response()->json(['combined'=>$combined,'currencies'=>$currencies,'categories'=>$categories]);
+        return response()->json('abc');
+        return response()->json('abc');
+        return response()->json('abc');
+        return response()->json('abc');
 
     }
     public function create($id)
