@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CustomerBillingCollection;
+use App\Models\Payment;
 use App\Models\Subscription;
 use App\Models\SubscriptionItem;
 use App\Models\User;
@@ -12,6 +13,7 @@ use App\Services\GetIpAdress;
 use App\Services\PaymentMethodService;
 use App\Services\UserIndexService;
 use Illuminate\Http\Request;
+use Laravel\Cashier\Events\WebhookReceived;
 
 class SubscriptionController extends Controller
 {
@@ -34,11 +36,20 @@ class SubscriptionController extends Controller
                 ]);
             }
         }
-        //товар
+        $id = 0;
+        if($customer->id) {
+            $id = $customer->id;
+        }
+        else {
+            $id = $customer->metadata->user_id;
+        }
         $checkout = $stripe->checkout->sessions->create([
-            'customer'=>$customer->id,
+            'customer'=>$id,
             'success_url' => 'http://localhost:3000/dashboard/subscription/success',
             'cancel_url' => 'http://localhost:3000/dashboard/subscription/cancel',
+            "metadata" => array(
+                "user_id" => $user->id,
+            ),
             'line_items' => [               [
                    'price_data'=> [
                        'currency'=>'usd',
@@ -69,24 +80,56 @@ class SubscriptionController extends Controller
     }
     public function webhook(Request $request)
     {
-
         $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
         $arr = $request;
-        if ($arr['data']['object']['lines']['data'][0]['plan']['product']) {
+        if($arr['type'] == 'payment_intent.succeeded') {
+
+            $prod = $arr['data']['object']['charges']['data'][0];
+            $payment_pi = $prod['payment_intent'];
+            $payment_pm = $prod['payment_method'];
+            $payment_amount = $prod['amount'] / 100;
+            $payment_last4 = $prod['payment_method_details']['card']['last4'];
+            $payment_card_brand = $prod['payment_method_details']['card']['brand'];
+            $payment_country = $prod['payment_method_details']['card']['country'];
+            $payment_currency = $prod['currency'];
+            $customer_payment_name = $prod['billing_details']['name'];
+            $customer_payment_id = $prod['customer'];
+            $payment_risk_level = $prod['outcome']['risk_level'];
+            $payment_risk_score = $prod['outcome']['risk_score'];
+            $user_payment_customer = $stripe->customers->retrieve(
+                $customer_payment_id,
+                []
+            );
+            $product_payment = new Payment();
+            $product_payment->user_id = $user_payment_customer->metadata->user_id;
+            $product_payment->name = $customer_payment_name;
+            $product_payment->currency = $payment_currency;
+            $product_payment->amount = $payment_amount;
+            $product_payment->last4 = $payment_last4;
+            $product_payment->card_brand = $payment_card_brand;
+            $product_payment->country = $payment_country;
+            $product_payment->customer = $user_payment_customer->id;
+            $product_payment->risk_level = $payment_risk_level;
+            $product_payment->risk_score = $payment_risk_score;
+            $product_payment->pi = $payment_pi;
+            $product_payment->pm = $payment_pm;
+            $product_payment->save();
+
+        }
+        if ($arr['type'] == 'invoice.created') {
+            \Log::info($request);
             $customer = $arr['data']['object']['customer'];
             $user_customer = $stripe->customers->retrieve(
                 $customer,
                 []
             );
             $user_id = $user_customer->metadata->user_id;
-
             $product_prod = $arr['data']['object']['lines']['data'][0]['plan']['product'];
             $price = $arr['data']['object']['lines']['data'][0]['plan']['id'];
             $stripe_product = $stripe->products->retrieve(
                 'prod_LUHfmTvmaDjbfK',
                 []
             );
-
             $stripe_id = SubscriptionItem::where('stripe_id', $arr['data']['object']['lines']['data'][0]['plan']['product'])
                 ->firstOrCreate([
                         'stripe_id' => $product_prod,
@@ -100,17 +143,19 @@ class SubscriptionController extends Controller
             $sub->name = $stripe_product->name;
             $sub->stripe_id = $stripe_id->id;
             $sub->stripe_price = $price;
-            $sub->stripe_status = $arr['data']['object']['status'];
-            $sub->quantity = $arr['data']['object']['lines']['data'][0]['quantity'];
-            if ($arr['data']['object']['lines']['data'][0]['plan']['trial_period_days'] == '') {
+            $abc = $arr['data']['object'];
+            $sub->stripe_status = $abc['status'];
+            $sub->quantity = $abc['lines']['data'][0]['quantity'];
+            if ($abc['lines']['data'][0]['plan']['trial_period_days'] == '') {
                 $sub->trial_ends_at = date('Y-m-d');
-                $sub->ends_at = date('Y-m-d');
+                $sub->ends_at = DateService::numberToDate($abc['lines']['data'][0]['period']['end']);
             } else {
-                $sub->trial_ends_at = $arr['data']['object']['lines']['data'][0]['plan']['trial_period_days'];
+                $sub->trial_ends_at = $abc['lines']['data'][0]['plan']['trial_period_days'];
                 $sub->ends_at = '';
             }
-            $sub->created_at = (string)$arr['data']['object']['created'];
-            $sub->updated_at = (string)$arr['data']['object']['created'];
+            $sub->created_at = DateService::numberToDate($abc['lines']['data'][0]['period']['start']);
+            $sub->updated_at = (string)$abc['created'];
+            $sub->invoice_id = $abc['id'];
             $sub->save();
 
             $endpoint_secret = env('WEBHOOK_KEY');
@@ -129,7 +174,6 @@ class SubscriptionController extends Controller
             if ($request->type == 'checkout.session.completed') {
                 \Log::info("its all done");
             }
-
             return response()->json(["status" => "success"]);
         }
     }
@@ -184,7 +228,8 @@ class SubscriptionController extends Controller
     }
     public function getUserSubscriptions() {
         $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
-        $user = User::find(auth()->user()->id);
+//        $user = User::find(auth()->user()->id);
+        $user = User::find(3);
         $search = 'metadata[\'user_id\']:'."'$user->id'";
         $customer = $stripe->customers->search([
             'query' => $search,
@@ -198,8 +243,6 @@ class SubscriptionController extends Controller
         foreach($cards as $card) {
             $arr_cards[] = PaymentMethodService::makeCardParametr($card);
         }
-
-
         $cstmr = $stripe->customers->retrieve(
             $customer_id,
             []
@@ -218,6 +261,7 @@ class SubscriptionController extends Controller
                 $elem->invoice_id,
                 []
             );
+
             $elem->price = $arr[$i]->metadata->price;
             $elem->currency = $arr1[$i]->currency;
             $elem->start = DateService::numberToDate($arr1[$i]['lines']['data'][0]['period']['start']);
@@ -227,7 +271,8 @@ class SubscriptionController extends Controller
             $elem->status = $arr1[$i]->paid;
             $elem->amount = $arr[$i]->metadata->price;
             $i = $i + 1;
-        }
+
+    }
         return response()->json([new CustomerBillingCollection($customer_items),$arr_cards]);
         }
 

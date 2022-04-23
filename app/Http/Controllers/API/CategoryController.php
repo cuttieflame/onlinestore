@@ -11,26 +11,28 @@ use Illuminate\Support\Facades\Cache;
 
 class CategoryController extends Controller
 {
-
+    private $product;
+    public function __construct(Products $product,Brand $brand)
+    {
+        $this->product = $product;
+        $this->brand = $brand;
+    }
     public function index(Request $request,$id = 0): \Illuminate\Http\JsonResponse
     {
         if($id != 0) {
             $a = preg_replace('/\D+/', '', $id);
-            $subcategories = \Cache::remember('subcategories', '14400', function () use ($a) {
-                return Category::select(['id'])->where('id',$a)->first();
-            });
             $subbrands = \Cache::remember('subbrands', '14400', function () {
-                return \DB::table('brands')->select(['id','title','category_id','categories'])->get();
+                return $this->brand->select(['id','title','category_id','categories'])->get();
             });
             $bss = ProductArrayService::makeBrandArray($subbrands,$a);
-            $builder = Products::withAttributeOptions(['pr-price','pr-ctgrs'])
+            $builder = $this->product->withAttributeOptions(['pr-price','pr-ctgrs'])
                 ->join('product_categories', 'product_categories.product_id', '=', 'products.id')
                 ->where('product_categories.category_id',$a);
             $arrmax = [];
 
             $ctgr = ProductArrayService::makeRelatedCategories($builder);
             $rld_itms = array_unique($ctgr[1]);
-            $related_items = Category::whereIn('id',$rld_itms)->where('parent_id','=',null)
+            $related_items = $this->brand->whereIn('id',$rld_itms)->where('parent_id','=',null)
                 ->with('childrencategories')
                 ->get();
 

@@ -15,7 +15,7 @@ class CreateBrandsTable extends Migration
     {
         Schema::create('brands', function (Blueprint $table) {
             $table->id();
-            $table->string('title',100);
+            $table->string('name',100);
 
             $table->unsignedBigInteger("category_id");
             $table->foreign("category_id")->references("id")->on("categories")->onDelete('cascade');

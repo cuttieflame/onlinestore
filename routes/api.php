@@ -33,10 +33,14 @@ Route::prefix('v1')->middleware(['api'])->group(function() {
     Route::get('user',[UserController::class,'index']);
     Route::delete('/user/destroy/{id}',[UserController::class,'destroy']);
     Route::put('/user/update/{id}',[UserController::class,'update']);
+    Route::post('/user/updateImage/{id}',[UserController::class,'updateImage']);
+
     Route::get('/brands_categories',[BrandsAndCategoriesController::class,'index']);
     Route::get('/products', [ProductController::class, 'index']);
-    Route::get('/product/{id}', [ProductController::class, 'myProducts']);
+    Route::get('/product/{id}', [ProductController::class, 'userProduct']);
     Route::post('/products/create', [ProductController::class, 'store']);
+    Route::post('products/delete',[ProductController::class,'delete']);
+    Route::post('products/image/{product_id}',[ProductController::class,'uploadProductImage']);
 
     Route::get('/cart',[CartController::class,'get']);
     Route::post('/cart/add/{product_id}',[CartController::class,'add']);

@@ -2,20 +2,25 @@
 
 namespace App\Http\Controllers\API;
 
+use App\DataTransferObjects\UserData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UserAccountRequest;
 use App\Http\Resources\UserCollection;
 use App\Models\User;
+use App\Services\ImageService;
 use App\Services\UserIndexService;
 use Hash;
 use Illuminate\Http\Request;
+use Image;
+
+
 class UserController extends Controller
 {
     public function index(Request $request)
     {
         $id = auth()->id();
-        $user = UserIndexService::getUser($id);
-        session(['user_id' => $id]);
+        $user = UserIndexService::getUser(3);
+
         return response()->json(['data'=>$user]);
     }
     public function create()
@@ -37,18 +42,26 @@ class UserController extends Controller
     }
     public function update(UserAccountRequest $request, $id)
     {
-//        $validated = $request->validated();
-//        $user = User::findOrFail($id);
-//        $user->name = $request->input('name');
-//        $user->email = $request->input('email');
-//        $user->account_details->first_name = $request->input('first_name');
-//        $user->account_details->last_name = $request->input('last_name');
-//        $user->account_details->organization = $request->input('organization');
-//        $user->account_details->location = $request->input('location');
-//        $user->account_details->phone = $request->input('phone');
-//        $user->account_details->birthday = $request->input('birthday');
-//        $user->save(array_slice($validated,0,2));
-//        $user->account_details->save(array_slice($validated,2));
+            $validated = UserData::fromRequest($request);
+            $user = User::findOrFail($id);
+            $user->name = $validated->name;
+            $user->email = $validated->email;
+            $user->account_details->first_name = $validated->first_name;
+            $user->account_details->last_name = $validated->last_name;
+            $user->account_details->organization = $validated->organization;
+            $user->account_details->location = $validated->location;
+            $user->account_details->phone = $validated->phone;
+            $user->account_details->birthday = $validated->birthday;
+            $user->save();
+            $user->account_details->save();
+    }
+    public function updateImage(Request $request,$id) {
+        $file = $request->file('file');
+        $a = ImageService::InvertionImage($file);
+        $user = User::find($id);
+        $user->account_details->user_image = $a;
+        $user->account_details->save();
+        return response()->json(['status'=>'Аватарка обновлена']);
     }
     public function destroy($id)
     {

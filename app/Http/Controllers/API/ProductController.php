@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Contracts\ProductInterface;
 use App\DataTransferObjects\ProductData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductStoreRequest;
+use App\Http\Resources\ProductCollection;
 use App\Models\Currency;
 use App\Models\PostView;
 use App\Jobs\UploadProductAndAttributeOptions;
@@ -15,38 +17,43 @@ use App\Models\ProductPrice;
 use App\Models\User;
 use App\Products;
 use App\Services\ArrayOptionService;
+use App\Services\ImageService;
 use App\Services\ImageToObjectArray;
 use Eav\AttributeOption;
 use Illuminate\Http\Request;
 use Illuminate\Container\Container;
 
-class ProductController extends Controller
+class ProductController extends Controller implements ProductInterface
 {
-    public function index(Request $request)
+    private $product;
+    public function __construct(Products $product)
     {
-        $brands = \DB::table('brands')->select(['id','title'])->get();
+        $this->product = $product;
+    }
+    public function index()
+    {
+        $brands = \DB::table('brands')->select(['id','name'])->get();
         $categories = \Cache::remember('categories', '14400', function () {
-            return Category::select(['id','parent_id','title'])->orderBy('id')->limit(25)->get();
+            return Category::select(['id','parent_id','name'])->orderBy('id')->limit(25)->get();
         });
         $currencies = \Cache::remember('currencies', '14400', function () {
             return Currency::get();
         });
-        $a = Products::withAttributeOptions(['pr-price'])
+        $a = $this->product->withAttributeOptions(['pr-price'])
                 ->orderBy('id')
                 ->limit(100)
                 ->get();
 
         $crct = ['currencies'=>$currencies,'categories'=>$categories];
-        return response()->json(['product'=>$a,'crct'=>$crct]);
+        return response()->json(['product'=>new ProductCollection($a),'crct'=>$crct]);
 
     }
-    public function myProducts($id,Request $request) {
+    public function userProduct(int $id,Request $request) {
         if($request->t == 'main') {
-            $a = Products::where('id',$id)
+            $a = $this->product->where('id',$id)
                 ->withAttributeOptions(['img','pr-info','pr-price'])
                 ->first();
-            $product_id = $a->id;
-                PostView::createViewLog($product_id);
+                PostView::createViewLog($a->id);
             $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
             $search = 'metadata[\'product_id\']:'."'$id'";
             $pr = $stripe->products->search([
@@ -65,6 +72,7 @@ class ProductController extends Controller
                     'currency' => $pr[0]['metadata']['currency'],
                     'price'=>$pr[0]['metadata']['price'],
                     'name'=>$pr[0]['name'],
+                    'product_id'=>$id
                 ],
                 'line_items' => [               [
                     'price_data'=> [
@@ -81,9 +89,12 @@ class ProductController extends Controller
             ]);
         }
         if($request->t == 'dsh') {
-            $a = Products::whereUser($id)
-                ->withAttributeOptions(['pr-price'])
-                ->get();
+            $builder = $this->product->whereUser($id)
+                ->withAttributeOptions(['pr-price']);
+            if($request->cp == 0) {
+
+            }
+            $a = $builder->get();
             $checkout = null;
         }
         return response()->json(['product'=>$a,'stripe'=>$checkout]);
@@ -98,7 +109,7 @@ class ProductController extends Controller
                 'entity_id' => 1,
                 'attribute_set_id' => 1
             ]);
-            $product = Products::find($id);
+            $product = $this->product->find($id);
             activity()
                 ->performedOn($product)
                 ->causedBy(auth()->user()->id)
@@ -113,26 +124,28 @@ class ProductController extends Controller
         }
         try {
             $pr_ctg = new ProductCategory();
-            $pr_ctg->product_id = $id;
-            $pr_ctg->category_id = $validated->category;
-
-            $pr_ctg->save();
+            $b = explode(",",$validated->category);
+            foreach($b as $elem) {
+                $pr_ctg->product_id = $id;
+                $pr_ctg->category_id = $elem;
+                $pr_ctg->save();
+            }
         }
         catch(\Exception $e) {
             \DB::rollback();
             throw $e;
         }
-        try {
-            $images = new Image();
-            $images->images = ImageToObjectArray::make($validated->images);
-            $images->product_id = $id;
-            $images->save();
-        }
-        catch(\Exception $e)
-        {
-            \DB::rollback();
-            throw $e;
-        }
+//        try {
+//            $images = new Image();
+//            $images->images = ImageToObjectArray::make($validated->images);
+//            $images->product_id = $id;
+//            $images->save();
+//        }
+//        catch(\Exception $e)
+//        {
+//            \DB::rollback();
+//            throw $e;
+//        }
         try {
             $pr_price = new ProductPrice();
             $pr_price->id = $id;
@@ -154,22 +167,27 @@ class ProductController extends Controller
         }
 
         \DB::commit();
+        return response()->json(['product_id'=>$id]);
+    }
+    public function uploadProductImage(Request $request,int $id) {
+        $file = $request->file('file');
+        $files = $request->file('files');
+        $a = ImageService::InvertionImage($file);
+        $b = ImageService::InvertionImages($files);
+        $images = new Image();
+        $images->images = ImageToObjectArray::make($b);
+        $images->product_id = $id;
+        $images->save();
+        $atr_options = AttributeOption::where(['product_id'=>$id,'attribute_id'=>6])->first();
+        $atr_options->value = $a;
+        $atr_options->save();
+    }
+    public function delete(Request $request) {
+        $a =  explode(",", $request->pr);
+        foreach($a as $elem) {
+           Products::where('id',$elem)->delete();
+        }
+        return response()->json($request);
+    }
 
-    }
-    public function show($id)
-    {
-        //
-    }
-    public function edit($id)
-    {
-        //
-    }
-    public function update(Request $request, $id)
-    {
-        //
-    }
-    public function destroy($id)
-    {
-
-    }
 }

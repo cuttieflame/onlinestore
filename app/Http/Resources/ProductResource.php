@@ -4,38 +4,33 @@ namespace App\Http\Resources;
 
 use ApiHelper\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Brick\Money\Money;
+use Brick\Money\Context\CustomContext;
+
 
 class ProductResource extends JsonResource
 //class ProductResource extends ResourceCollection
 {
     public function toArray($request)
     {
+        $minus = $this->productprice->price * (1 - $this->productprice->discount / 100);
         return [
-            'data' => $this->resource,
+            'id'=>$this->id,
+            'entity_id'=>$this->entity_id,
+            'attribute_set_id'=>$this->attribute_set_id,
+            'created_at'=>$this->created_at,
+            'updated_at'=>$this->updated_at,
+            'user_id'=>$this->user_id,
+            'attributesoptions'=>$this->attributesoptions,
 
-
-
-//            'entity_id' => $this->resource[0]->entity_id,
-//            'attribute_set_id' => $this->resource[0]->attribute_set_id,
-//            'created_at' => $this->resource[0]->attribute_set_id,
-//            'updated_at' => $this->resource[0]->attribute_set_id,
-//            'user_id' => $this->resource[0]->user_id,
-//            'attributesoptions' => $this->resource[0]->attributesoptions,
-//            'productprice' => $this->resource[0]->productprice,
-
-//            'name'=> $this->resource->name,
-//            'content'=>$this->resource->content,
-//            'view_count'=>$this->resource->view_count,
-//            'main_image'=>$this->resource->main_image,
-//            'images'=>$this->resource->images,
-//            'price'=>$this->resource->price,
-//            'category_id'=>$this->resource->category_id,
-//            'brand_id'=>$this->resource->brand_id,
-//                'product_id'=>$this->resource->product_id,
-//                'rating'=>$this->resource->rating,
-//                'order_count'=>$this->resource->order_count,
-//                'name_attributes'=>$this->resource->name_attributes,
-//                'attribute_info'=>$this->resource->attribute_info,
+            'productprice'=>[
+              'id'=>$this->productprice->id,
+              'price'=>$this->productprice->price,
+             'discount'=>$this->productprice->discount,
+              'old_price'=>$this->productprice->old_price,
+              'created_at'=>$this->productprice->created_at,
+              'updated_at'=>$this->productprice->updated_at,
+            ],
         ];
     }
 }

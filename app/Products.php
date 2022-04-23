@@ -11,6 +11,7 @@ use App\Models\ProductPrice;
 use App\Services\CurrencyConvertion;
 use App\Traits\Imageable;
 //use Kirschbaum\PowerJoins\PowerJoins;
+use Laravel\Scout\Searchable;
 
 use Eav\Attribute;
 use Eav\AttributeOption;
@@ -20,6 +21,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Products extends Model
 {
     use HasFactory;
+//    use Searchable;
 //    use PowerJoins;
     protected $table = "products";
     public $incrementing = false;

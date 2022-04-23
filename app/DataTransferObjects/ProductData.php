@@ -6,9 +6,10 @@ use Illuminate\Http\Request;
 final class ProductData extends ObjectData
 {
     public string $name;
+    public string $content;
     public int $price;
-    public int $brand;
-    public int $category;
+    public string $brand;
+    public string $category;
     public string $tags;
     public string $main_image;
     public array $images;
@@ -26,6 +27,7 @@ final class ProductData extends ObjectData
         return new ProductData(
 
             name: $request->get('name'),
+            content: $request->get('content'),
             price: $request->get('price'),
             brand: $request->get('brand'),
             category: $request->get('category'),

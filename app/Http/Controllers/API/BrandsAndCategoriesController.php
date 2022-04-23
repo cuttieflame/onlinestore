@@ -11,10 +11,10 @@ class BrandsAndCategoriesController extends Controller
 {
     public function index() {
         $categories = \Cache::remember('categories', '14400', function () {
-            return \DB::table('categories')->orderBy('id')->select(['id','title'])->get();
+            return \DB::table('categories')->orderBy('id')->select(['id','name'])->get();
         });
         $brands = \Cache::remember('brands', '14400', function () {
-            return \DB::table('brands')->orderBy('id')->select(['id','title'])->get();
+            return \DB::table('brands')->orderBy('id')->select(['id','name'])->get();
         });
         $crct = ['categories'=>$categories,'brands'=>$brands];
         return response()->json(['crct'=>$crct]);

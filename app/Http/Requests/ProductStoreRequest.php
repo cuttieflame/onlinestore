@@ -26,8 +26,8 @@ class ProductStoreRequest extends FormRequest
         return [
             'name'=>'string',
             'price'=>'integer|min:1|max:1000000',
-            'brand'=>'integer|min:1',
-            'category'=>'integer|min:1',
+            'brand'=>'string',
+            'category'=>'string',
             'tags'=>'string',
             'main_image'=>'string',
             'images'=>'array',

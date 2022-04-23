@@ -25,7 +25,7 @@ class UserAccountRequest extends FormRequest
     {
         return [
             'name' => 'required|string',
-            'email' => 'required|email|unique:users',
+            'email' => 'required|email',
             'first_name'=>'required|string|min:5',
             'last_name'=>'required|string|min:5',
             'organization'=>'required|min:5',

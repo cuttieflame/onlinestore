@@ -24,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
         Sanctum::usePersonalAccessTokenModel(
             PersonalAccessToken::class
         );
-        $this->app->register(RepositoryServiceProvider::class);
+//        $this->app->register(RepositoryServiceProvider::class);
     }
     public function boot()
     {

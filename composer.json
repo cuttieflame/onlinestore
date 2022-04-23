@@ -7,12 +7,14 @@
     "require": {
         "php": "^7.3|^8.0",
         "algolia/algoliasearch-client-php": "^3.2",
+        "algolia/scout-extended": "^2.0",
         "brick/money": "^0.5.3",
         "denis660/laravel-centrifugo": "^2.1",
         "dragon-code/laravel-json-response": "^2.2",
         "elasticsearch/elasticsearch": "^7.17",
         "fruitcake/laravel-cors": "^3.0",
         "guzzlehttp/guzzle": "^7.4",
+        "intervention/image": "^2.7",
         "kirschbaum-development/eloquent-power-joins": "^2.6",
         "laravel/cashier": "^13.8",
         "laravel/framework": "^8.75",
@@ -25,10 +27,10 @@
         "socialiteproviders/vkontakte": "^4.2",
         "spatie/data-transfer-object": "^3.7",
         "spatie/laravel-activitylog": "^4.5",
+        "spatie/laravel-enum": "^3.0",
         "sunel/eav": "^0.3.1",
         "symfony/dom-crawler": "^6.0",
         "torann/geoip": "^3.0"
-
     },
     "require-dev": {
         "dragon-code/pretty-routes": "^3.1",
