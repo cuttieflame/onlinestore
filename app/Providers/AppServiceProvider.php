@@ -2,15 +2,15 @@
 
 namespace App\Providers;
 
-use Illuminate\Http\Resources\Json\JsonResource;
-use Laravel\Sanctum\Sanctum;
 use App\Models\PersonalAccessToken;
 use App\Models\Product;
 use App\Models\User;
-use App\Observers\ProductObserver;
 use App\Observers\UserObserver;
-use Illuminate\Support\ServiceProvider;
 use App\Providers\RepositoryServiceProvider;
+use App\Services\Test\DemoOne;
+use App\Services\Test\DemoOneInterface;
+use Illuminate\Support\ServiceProvider;
+use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,10 +24,21 @@ class AppServiceProvider extends ServiceProvider
         Sanctum::usePersonalAccessTokenModel(
             PersonalAccessToken::class
         );
+        $this->app->bind(\App\Services\Stripe\IStripeManager::class, function ($app) {
+            return new \App\Services\Stripe\StripeManager($app);
+        });
+        $this->app->bind(\App\Services\Order\IOrderManager::class, function ($app) {
+            return new \App\Services\Order\OrderManager($app);
+        });
+        $this->app->bind(DemoOneInterface::class,function($app) {
+           return new DemoOne();
+        });
 //        $this->app->register(RepositoryServiceProvider::class);
+
     }
     public function boot()
     {
+
         User::observe(UserObserver::class);
 //        JsonResource::withoutWrapping();
 

@@ -10,6 +10,7 @@ class ProductCategory extends Model
     protected $table = 'product_categories';
     public $incrementing = false;
     public $timestamps = false;
+    protected $fillable = ['product_id','category_id'];
     use HasFactory;
 
     public function categories() {

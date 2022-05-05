@@ -30,7 +30,6 @@ class MailerTest extends TestCase
         $container = Container::getInstance();
         $userManager = $container->make(MailManager::class);
         $userManager->register('kokodan222@gmail.com', 'email');
-
-
     }
+
 }

@@ -26,11 +26,12 @@ class UserAccountRequest extends FormRequest
         return [
             'name' => 'required|string',
             'email' => 'required|email',
-            'first_name'=>'required|string|min:5',
-            'last_name'=>'required|string|min:5',
-            'organization'=>'required|min:5',
-            'location'=>'required|min:5',
-            'phone'=>'required'
+            'first_name'=>'required|string',
+            'last_name'=>'required|string',
+            'organization'=>'required',
+            'location'=>'required',
+            'phone'=>'required',
+            'birthday'=>'required'
         ];
     }
 }

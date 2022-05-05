@@ -1,8 +1,9 @@
 <?php
-
+declare(strict_types=1);
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Products;
 use App\Services\ProductArrayService;
@@ -12,40 +13,39 @@ use Illuminate\Support\Facades\Cache;
 class CategoryController extends Controller
 {
     private $product;
-    public function __construct(Products $product,Brand $brand)
+    private $brand;
+    private $category;
+    private $productArrayService;
+    public function __construct(Products $product,Brand $brand,Category $category,ProductArrayService $productArrayService)
     {
         $this->product = $product;
         $this->brand = $brand;
+        $this->category = $category;
+        $this->productArrayService = $productArrayService;
     }
     public function index(Request $request,$id = 0): \Illuminate\Http\JsonResponse
     {
         if($id != 0) {
             $a = preg_replace('/\D+/', '', $id);
             $subbrands = \Cache::remember('subbrands', '14400', function () {
-                return $this->brand->select(['id','title','category_id','categories'])->get();
+                return $this->brand->select(['id','name','category_id','categories'])->get();
             });
-            $bss = ProductArrayService::makeBrandArray($subbrands,$a);
+            $bss = $this->productArrayService->makeBrandArray($subbrands,$a);
             $builder = $this->product->withAttributeOptions(['pr-price','pr-ctgrs'])
                 ->join('product_categories', 'product_categories.product_id', '=', 'products.id')
                 ->where('product_categories.category_id',$a);
             $arrmax = [];
 
-            $ctgr = ProductArrayService::makeRelatedCategories($builder);
+            $ctgr = $this->productArrayService->makeRelatedCategories($builder);
             $rld_itms = array_unique($ctgr[1]);
-            $related_items = $this->brand->whereIn('id',$rld_itms)->where('parent_id','=',null)
+            $related_items = $this->category->whereIn('id',$rld_itms)->where('parent_id',null)
                 ->with('childrencategories')
                 ->get();
-
-//            foreach($arrctgr as $elem) {
-//                $firstIndex = stripos($elem, '+');
-//                $id = substr($elem,0,$firstIndex);
-//                $parent_id = substr($elem,$firstIndex + 1,strlen($elem));
-//            }
 
             $max = max($ctgr[0]);
             $min = min($ctgr[0]);
 
-            $avg = ($min + $max) * 0.5;
+            $avg = (min($ctgr[0]) + max($ctgr[0])) * 0.5;
 
             if ($request->has('br') or $request->has('pr') or $request->o !== "undefined" and $request->o !== null or $request->has('s') or in_array($request->o, ['pr-in', 'pr-de'])) {
 
@@ -88,11 +88,10 @@ class CategoryController extends Controller
                         ['value', 'like', "%{$query}%"],
                     ]);
                 });
-            $ctgr = ProductArrayService::makeRelatedCategories($builder);
-            $max = max($ctgr[0]);
-            $min = min($ctgr[0]);
+            $ctgr = $this->productArrayService->makeRelatedCategories($builder);
 
-            $avg = ($min + $max) * 0.5;
+
+            $avg = (min($ctgr[0]) + max($ctgr[0])) * 0.5;
             if ($request->has('br') or $request->has('pr') or $request->o !== "undefined" and $request->o !== null or $request->has('s') or in_array($request->o, ['pr-in', 'pr-de'])) {
 
                 if($request->br) {
@@ -123,8 +122,8 @@ class CategoryController extends Controller
                 }
             }
 
-            $subbrands = \DB::table('brands')->select(['id','title','category_id','categories'])->get();
-            $bss = ProductArrayService::makeBrandArray($subbrands,1);
+            $subbrands = \DB::table('brands')->select(['id','name','category_id','categories'])->get();
+            $bss = $this->productArrayService->makeBrandArray($subbrands,1);
             $related_items = \DB::table('categories')->whereIn('id',array_unique($ctgr[1]))->get();
             $products = $builder->limit(200)->paginate(10);
 

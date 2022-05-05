@@ -22,12 +22,29 @@ class CurrencyConvertion
         $originCurrency = self::$container[$originCurrencyCode];
 
         if(is_null($targetCurrencyCode)) {
-            $targetCurrencyCode = Session::get('currency','RUB');
+            if(session()->has('currency')) {
+                $targetCurrencyCode = session()->get('currency','RUB');
+            }
+            if(session()->has('coupon')) {
+                $targetCurrencyCode = session()->get('coupon','RUB');
+            }
+            if(!session()->has('coupon') and !session()->has('currency')) {
+                $targetCurrencyCode = 'RUB';
+            }
         }
 
         $targetCurrency = self::$container[$targetCurrencyCode];
-
-        return $sum * $originCurrency->rate * $targetCurrency->rate;
+        $gvn = 0;
+        if(session()->has('currency')) {
+            $gvn = $sum * $originCurrency->rate * $targetCurrency->rate;
+        }
+        if(session()->has('coupon')) {
+            $gvn = $sum * (1 - session()->get('coupon_value') / 100);
+        }
+        if(!session()->has('coupon') and !session()->has('currency')) {
+            $gvn = $sum * $originCurrency->rate * $targetCurrency->rate;
+        }
+        return $gvn;
     }
     public static function getCurrencies()
     {

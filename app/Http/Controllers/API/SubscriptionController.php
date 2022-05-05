@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\DateService;
 use App\Services\GetIpAdress;
 use App\Services\PaymentMethodService;
+use App\Services\Stripe\IStripeManager;
 use App\Services\UserIndexService;
 use Illuminate\Http\Request;
 use Laravel\Cashier\Events\WebhookReceived;
@@ -19,21 +20,18 @@ class SubscriptionController extends Controller
 {
     public function index() {
         $user = User::find(3);
+        $abc = app(IStripeManager::class);
+        $service = $abc->make('stripe');
         $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
-        $all_customers = $stripe->customers->all();
+        $all_customers = $service->getAllCustomers();
         foreach($all_customers as $elem) {
             if($elem->metadata->user_id == $user->id) {
                 $search = 'metadata[\'user_id\']:'."'$user->id'";
-                $cus = $stripe->customers->search([
-                    'query' => $search,
-                ]);
+                $cus = $service->customerSearch($search);
                 $customer = $cus['data'][0];
             }
             else {
-                $customer = $stripe->customers->create([
-                    'description' => 'My First Test Customer (created for API docs)',
-                    ['metadata' => ['user_id' => $user->id]]
-                ]);
+                $customer = $service->createCustomer($user->id);
             }
         }
         $id = 0;
@@ -43,39 +41,8 @@ class SubscriptionController extends Controller
         else {
             $id = $customer->metadata->user_id;
         }
-        $checkout = $stripe->checkout->sessions->create([
-            'customer'=>$id,
-            'success_url' => 'http://localhost:3000/dashboard/subscription/success',
-            'cancel_url' => 'http://localhost:3000/dashboard/subscription/cancel',
-            "metadata" => array(
-                "user_id" => $user->id,
-            ),
-            'line_items' => [               [
-                   'price_data'=> [
-                       'currency'=>'usd',
-                       'unit_amount'=>500,
-                       'product_data'=>[
-                         'name'=>"Cool stripe checkout",
-                   ],
-                   ],
-                    'quantity'=>1,
-                ],
-            ],
-            'mode' => 'payment',
-        ]);
-        //подписка
-        $sub = $stripe->checkout->sessions->create([
-            'customer'=>$customer->id,
-            'success_url' => 'http://localhost:3000/dashboard/subscription/success',
-            'cancel_url' => 'http://localhost:3000/dashboard/subscription/cancel',
-            'line_items' => [
-                [
-                    'price'=>'price_1KnJ6LLfaQqcaRmQZYNbj8Gj',
-                    'quantity'=>1,
-                ],
-            ],
-            'mode' => 'subscription',
-        ]);
+        $checkout = $service->createTestCheckoutSession($id,$user->id);
+        $sub = $service->createSubscription($customer->id);
         return response()->json(['check'=>$checkout,'sub'=>$sub]);
     }
     public function webhook(Request $request)
@@ -83,7 +50,6 @@ class SubscriptionController extends Controller
         $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
         $arr = $request;
         if($arr['type'] == 'payment_intent.succeeded') {
-
             $prod = $arr['data']['object']['charges']['data'][0];
             $payment_pi = $prod['payment_intent'];
             $payment_pm = $prod['payment_method'];
@@ -117,7 +83,6 @@ class SubscriptionController extends Controller
 
         }
         if ($arr['type'] == 'invoice.created') {
-            \Log::info($request);
             $customer = $arr['data']['object']['customer'];
             $user_customer = $stripe->customers->retrieve(
                 $customer,

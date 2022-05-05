@@ -2,15 +2,14 @@
 
 namespace App\Traits;
 
+use App\Models\Role;
+use App\Models\Permission;
 trait HasRolesAndPermissions
 {
     public function roles()
     {
         return $this->belongsToMany(Role::class,'users_roles');
     }
-    /**
-     * @return mixed
-     */
     public function permissions()
     {
         return $this->belongsToMany(Permission::class,'users_permissions');
@@ -27,13 +26,9 @@ trait HasRolesAndPermissions
     {
         return (bool) $this->permissions->where('slug', $permission)->count();
     }
-    /**
-     * @param $permission
-     * @return bool
-     */
-    public function hasPermissionTo($permission)
+    protected function hasPermissionTo($permission)
     {
-        return $this->hasPermissionThroughRole($permission) || $this->hasPermission($permission->slug);
+        return $this->hasPermission($permission);
     }
     public function hasPermissionThroughRole($permission)
     {
@@ -44,14 +39,14 @@ trait HasRolesAndPermissions
         }
         return false;
     }
-    public function getAllPermissions(array $permissions)
+    protected function getAllPermissions(array $permissions)
     {
         return Permission::whereIn('slug',$permissions)->get();
     }
-    /**
-     * @param mixed ...$permissions
-     * @return $this
-     */
+    protected function getAllRoles(array $roles)
+    {
+        return Role::whereIn('slug',$roles)->get();
+    }
     public function givePermissionsTo(... $permissions)
     {
         $permissions = $this->getAllPermissions($permissions);
@@ -61,12 +56,18 @@ trait HasRolesAndPermissions
         $this->permissions()->saveMany($permissions);
         return $this;
     }
+
+    /**
+     * @param mixed ...$permissions
+     * @return $this
+     */
     public function deletePermissions(... $permissions )
     {
         $permissions = $this->getAllPermissions($permissions);
         $this->permissions()->detach($permissions);
         return $this;
     }
+
     /**
      * @param mixed ...$permissions
      * @return HasRolesAndPermissions

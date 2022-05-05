@@ -37,7 +37,7 @@ return [
 
     'cipher' => 'AES-256-CBC',
 
-
+    'api_latest'  => '1',
 
     'providers' => [
 
@@ -85,6 +85,7 @@ return [
         \Torann\GeoIP\GeoIPServiceProvider::class,
         Eav\Providers\LaravelServiceProvider::class,
         Laravel\Scout\ScoutServiceProvider::class,
+        App\Providers\CustomServiceProvider::class,
 
 
     ],

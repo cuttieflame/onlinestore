@@ -13,6 +13,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
 
+
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens;
@@ -66,10 +67,17 @@ class User extends Authenticatable implements MustVerifyEmail
     public function account_details() {
         return $this->hasOne('App\Models\AccountDetail','id');
     }
-    public function roles() {
-        return $this->belongsToMany(Role::class);
+    public function role_users()
+    {
+        return $this->belongsToMany(Role::class,'role_users');
     }
-    public function permissions() {
+    public function role_user() {
+        return $this->hasMany(UserRole::class,'user_id');
+    }
+    public function permission_user() {
+        return $this->hasMany(UserPermission::class);
+    }
+    public function permission() {
         return $this->belongsToMany(Permission::class);
     }
 //    public function UserRole() {

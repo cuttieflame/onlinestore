@@ -20,12 +20,12 @@ class CartQuantity implements ShouldQueue
      */
     protected  $cart;
     protected  $quantity;
-    protected  $text;
-    public function __construct($cart,$quantity,$text)
+    protected  $value;
+    public function __construct($cart,$quantity,$value)
     {
         $this->cart = $cart;
         $this->quantity = $quantity;
-        $this->text = $text;
+        $this->value = $value;
     }
 
     /**
@@ -41,8 +41,8 @@ class CartQuantity implements ShouldQueue
         if($this->quantity == 'plus') {
             $this->cart->increment('quantity', 1);
         }
-        if($this->quantity == 'plus') {
-            $this->cart->quantity = $this->text;
+        if($this->quantity == 'change') {
+            $this->cart->quantity = $this->value;
         }
         $this->cart->save();
     }

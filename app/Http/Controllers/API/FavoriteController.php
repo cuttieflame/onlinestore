@@ -3,32 +3,35 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\CartCollection;
 use App\Models\Cart;
 use App\Models\Favorite;
 use App\Models\Product;
+use App\Products;
 
 class FavoriteController extends Controller
 {
-    public static function userFavorites($id = null) {
+    public function userFavorites($id = null) {
         $user_id = $id ? $id : (auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null);
 
         if(is_null($user_id)) {
             return false;
         }
-
         return Favorite::with(["product"])->where(["user_id" => $user_id])->get();
     }
 
-    public static function get() {
-        $products = Favorite::with(['product:id,name,content,view_count,main_image,price'])
+    public function get() {
+        $products = Favorite::with(['product' => function ($q) {
+            $q->withAttributeOptions(['pr-price']);
+        }])
             ->where(["session_id" => session()->getId()])
             ->get();
-        return response()->json(['products'=>$products]);
-//      return response()->json(['products'=>new CartResource($products)]);
+        return response()->json(['products'=>new CartCollection($products)],200);
     }
-    public static function add($product_id) {
-        $product = Product::findOrFail($product_id);
-
+    public function add($product_id) {
+        $product = Products::where('id',$product_id)
+            ->with(['productprice'])
+            ->first();
         if($cart = Favorite::where([
             "session_id" => session()->getId(),
             "product_id" => $product->id
@@ -42,15 +45,16 @@ class FavoriteController extends Controller
                 "user_id" => auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null,
             ]);
         }
-        return $cart;
+        return response()->json(['status'=>'Успешно добавлено в favorites'],200);
     }
-    public static function remove($id) {
+    public function remove($id) {
         return Favorite::destroy($id);
     }
-    public static function flush() {
-        return Favorite::where(["session_id" => session()->getId()])->delete();
+    public function flush() {
+        Favorite::where(["session_id" => session()->getId()])->delete();
+        return response()->json(['error'=>'Список избранных очищена'],200);
     }
-    public static function total() {
+    public function total() {
         return Favorite::get()->map(function ($item) {
             return $item->price * $item->quantity;
         })->sum();

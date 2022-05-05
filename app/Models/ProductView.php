@@ -6,16 +6,17 @@ use App\Products;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PostView extends Model
+class ProductView extends Model
 {
     use HasFactory;
+    protected $table = 'product_views';
     public function productView()
     {
         return $this->belongsTo(Products::class);
     }
 
     public static function createViewLog($product_id) {
-        $postViews= new PostView();
+        $postViews= new ProductView();
         $postViews->product_id = $product_id;
         $postViews->titleslug = 'slug';
         $postViews->url = request()->url();

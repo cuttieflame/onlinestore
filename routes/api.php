@@ -1,14 +1,14 @@
 <?php
 
-use App\Http\Controllers\API\BrandsAndCategoriesController;
 use App\Http\Controllers\API\CartController;
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\CentrifugaController;
+use App\Http\Controllers\API\CouponController;
 use App\Http\Controllers\API\CurrencyController;
 use App\Http\Controllers\API\FavoriteController;
+use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\API\ParserController;
 use App\Http\Controllers\API\ProductController;
-use App\Http\Controllers\API\ProductFilterController;
 use App\Http\Controllers\API\SearchController;
 use App\Http\Controllers\API\SubscriptionController;
 use App\Http\Controllers\API\TestController;
@@ -28,25 +28,29 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::prefix('v1')->middleware(['api'])->group(function() {
 
     Route::get('user',[UserController::class,'index']);
     Route::delete('/user/destroy/{id}',[UserController::class,'destroy']);
     Route::put('/user/update/{id}',[UserController::class,'update']);
     Route::post('/user/updateImage/{id}',[UserController::class,'updateImage']);
 
-    Route::get('/brands_categories',[BrandsAndCategoriesController::class,'index']);
+    Route::get('/brands_categories',[ProductController::class,'brandsandcategories']);
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/product/{id}', [ProductController::class, 'userProduct']);
-    Route::post('/products/create', [ProductController::class, 'store']);
+    Route::post('/products/create', [ProductController::class, 'store'])->middleware(['perm:create-products']);
     Route::post('products/delete',[ProductController::class,'delete']);
-    Route::post('products/image/{product_id}',[ProductController::class,'uploadProductImage']);
+    Route::post('products/image/{product_id}',[ProductController::class,'uploadProductImage'])->middleware(['perm:create-products']);
 
     Route::get('/cart',[CartController::class,'get']);
     Route::post('/cart/add/{product_id}',[CartController::class,'add']);
-    Route::put('/cart/quantity/{cart_id}/{quantity}/{value}',[CartController::class,'quantity']);
+    Route::put('/cart/quantity',[CartController::class,'quantity']);
     Route::post('/cart/clear',[CartController::class,'flush']);
     Route::delete('/cart/delete/{product_id}',[CartController::class,'remove']);
+
+    Route::post('/order/make/{id}',[OrderController::class,'makeOrder']);
+    Route::get('/coupons/',[CouponController::class,'index']);
+    Route::post('/coupons/make',[CouponController::class,'store']);
+    Route::get('/coupons/{coupon}',[CouponController::class,'changeCurrency']);
 
     Route::get('/favorite',[FavoriteController::class,'get']);
     Route::post('/favorite/add/{product_id}',[FavoriteController::class,'add']);
@@ -66,17 +70,12 @@ Route::prefix('v1')->middleware(['api'])->group(function() {
     Route::get('/stripe/allproducts',[SubscriptionController::class,'getAllProducts']);
     Route::get('/stripe/add/product',[SubscriptionController::class,'addProduct']);
     Route::get('/stripe/add/customer/{id}',[SubscriptionController::class,'addCustomer']);
-
-    Route::get('/user/subscriptions',[SubscriptionController::class,'getUserSubscriptions']);
-
     Route::get('/stripe/products/{id}',[SubscriptionController::class,'getProducts']);
     Route::post('/stripe/webhook',[SubscriptionController::class,'webhook']);
 
-
+    Route::get('/user/subscriptions',[SubscriptionController::class,'getUserSubscriptions']);
 
     Route::get('test',[TestController::class,'index']);
-});
-
 
 
 

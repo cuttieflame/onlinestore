@@ -9,7 +9,7 @@ final class ProductArrayService
         foreach($subbrands as $elems) {
             foreach( explode(",",preg_replace('/\[|\]/','',$elems->categories)) as $elem) {
                 if($elem == $a) {
-                    $bss[] = $elems->title.$elems->category_id;
+                    $bss[] = $elems->name.$elems->category_id;
                 }
             }
         }

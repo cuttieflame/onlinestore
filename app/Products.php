@@ -4,11 +4,12 @@ namespace App;
 
 
 use App\Models\Image;
-use App\Models\PostView;
+use App\Models\ProductView;
 use App\Models\ProductCategory;
 use App\Models\ProductInfo;
 use App\Models\ProductPrice;
 use App\Services\CurrencyConvertion;
+use App\Services\Filters\FilterBuilder;
 use App\Traits\Imageable;
 //use Kirschbaum\PowerJoins\PowerJoins;
 use Laravel\Scout\Searchable;
@@ -26,6 +27,7 @@ class Products extends Model
     protected $table = "products";
     public $incrementing = false;
     const ENTITY  = 'product';
+
 
     public function attributes()
     {
@@ -47,9 +49,9 @@ class Products extends Model
     public function productcategories() {
         return $this->hasMany(ProductCategory::class,'product_id');
     }
-    public function postView()
+    public function productview()
     {
-        return $this->hasMany(PostView::class,'product_id');
+        return $this->hasMany(ProductView::class,'product_id');
     }
     protected $casts = [
       'images'=>'array',
@@ -97,6 +99,13 @@ class Products extends Model
         if($a == 1) {$b = 'DESC';}
         $query->join('product_prices', 'product_prices.id', '=', 'products.id')
         ->orderBy('product_prices.price',$b);
+    }
+    public function scopeFilterBy($query, $filters)
+    {
+        $namespace = 'App\Services\FilterBuilder';
+        $filter = new FilterBuilder($query, $filters, $namespace);
+
+        return $filter->apply();
     }
 
 }

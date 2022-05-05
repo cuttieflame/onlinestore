@@ -13,7 +13,7 @@ class CreatePostViewsTable extends Migration
      */
     public function up()
     {
-        Schema::create('post_views', function (Blueprint $table) {
+        Schema::create('product_views', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('product_id')->nullable();
             $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
@@ -34,6 +34,6 @@ class CreatePostViewsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('post_views');
+        Schema::dropIfExists('product_views');
     }
 }

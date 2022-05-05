@@ -31,6 +31,8 @@ class ProductResource extends JsonResource
               'created_at'=>$this->productprice->created_at,
               'updated_at'=>$this->productprice->updated_at,
             ],
+            'images'=>$this->images ? $this->images->images : null,
+            'product_info'=>$this->productinfo ? $this->productinfo : null,
         ];
     }
 }

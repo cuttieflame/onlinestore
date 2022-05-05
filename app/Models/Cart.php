@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Eav\AttributeOption;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\MassPrunable;
 use App\Models\Product;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use League\Csv\Exception;
 
 class Cart extends Model
 {
@@ -27,8 +30,15 @@ class Cart extends Model
         return $this->belongsTo('App\Models\User');
     }
     public function product() {
-        return $this->hasMany('App\Products','id','product_id');
+        return $this->hasOne('App\Products','id','product_id');
     }
+    public function attributesoptions() {
+        return $this->hasMany(AttributeOption::class,'product_id','product_id');
+    }
+    public function productprice() {
+        return $this->belongsTo(ProductPrice::class,'product_id','id');
+    }
+
 //    public function vars() {
 //        return $this->belongsToMany(config("cart.product_variant_model"), "cart_vars", "cart_id", "variant_id");
 //    }
