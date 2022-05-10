@@ -36,7 +36,7 @@ class CartController extends Controller implements CartInterface
 
    return response()->json(['products'=>new CartCollection($products),'times'=>$times],200);
     }
-    public function add($product_id) {
+    public function add(int $product_id) {
         try {
             $product = Products::where('id', $product_id)
                 ->with(['productprice:id,price'])
@@ -66,7 +66,7 @@ class CartController extends Controller implements CartInterface
         $cart = Cart::select(['id','quantity'])->where('id',$request->cart_id)->first();
         CartQuantity::dispatch($cart,$request->quantity,$request->value);
     }
-    public function remove($id) {
+    public function remove(int $id) {
         return Cart::destroy($id);
     }
     public function flush() {
