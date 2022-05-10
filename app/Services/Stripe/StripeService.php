@@ -15,14 +15,37 @@ class StripeService implements IStripeService
         return $this->stripe->products->search([
             'query' => $query,
         ])['data'];
-
     }
+    public function productRetrieve($id) {
+        return $this->stripe->products->retrieve(
+            $id,
+            []
+        );
+    }
+
     public function customerSearch($query)
     {
         return $this->stripe->customers->search([
             'query' => $query,
         ]);
     }
+    public function getAllCustomers()
+    {
+        return $this->stripe->customers->all();
+    }
+    public function createCustomer($user_id,$name = null,$email = null,$phone = null) {
+        return $this->stripe->customers->create([
+            ['metadata' => ['user_id' => $user_id]]
+        ]);
+    }
+
+    public function invoceRetrieve($id) {
+        return $this->stripe->invoices->retrieve(
+            $id,
+            []
+        );
+    }
+
     public function createCheckoutSession($customer_id,$product_id,$product)
     {
         return $this->stripe->checkout->sessions->create([
@@ -47,16 +70,6 @@ class StripeService implements IStripeService
             ],
             ],
             'mode' => 'payment',
-        ]);
-    }
-    public function getAllCustomers()
-    {
-        return $this->stripe->customers->all();
-    }
-    public function createCustomer($user_id) {
-      return $this->stripe->customers->create([
-            'description' => 'My First Test Customer (created for API docs)',
-            ['metadata' => ['user_id' => $user_id]]
         ]);
     }
     public function createTestCheckoutSession($customer_id,$user_id)
@@ -100,5 +113,12 @@ class StripeService implements IStripeService
     {
         $this->stripe->subscriptions->all();
     }
+    public function getAllPaymentMethods($customer_id,$type = 'card') {
+        return $this->stripe->paymentMethods->all([
+            'customer' => $customer_id,
+            'type' => $type,
+        ]);
+    }
+
 
 }

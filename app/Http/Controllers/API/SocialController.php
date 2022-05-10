@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Contracts\SocialInterface;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Laravel\Socialite\Facades\Socialite;
 use Redirect;
 
-class SocialController extends Controller
+class SocialController extends Controller implements SocialInterface
 {
     public function index()
     {

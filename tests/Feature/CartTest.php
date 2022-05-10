@@ -25,7 +25,6 @@ class CartTest extends TestCase
     public function testCartIsAddProductSuccessfully()
     {
         $this->faker = Faker::create();
-
         $product_id = Products::insertGetId([
             'entity_id' => 1,
             'attribute_set_id' => 1

@@ -2,21 +2,19 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Contracts\OrderInterface;
 use App\DataTransferObjects\OrderData;
-use App\Exceptions\CartNotFoundException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\OrderRequest;
 use App\Models\Cart;
 use App\Models\Coupon;
 use App\Models\Order;
-use App\Models\OrderItem;
 use App\Services\GetIpAdress;
 use App\Services\Order\IOrderManager;
-use App\Services\UserIndexService;
+use App\Services\User\UserIndexService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Http\Request;
 
-class OrderController extends Controller
+class OrderController extends Controller implements OrderInterface
 {
     private $ip;
     private $user;
@@ -25,7 +23,7 @@ class OrderController extends Controller
         $this->ip = $ip;
         $this->user = $user;
     }
-    public function makeOrder(OrderRequest $request,$id) {
+    public function makeOrder(OrderRequest $request,int $id) {
         $validated = OrderData::fromRequest($request);
         $address = $this->ip->getIp();
         $abc = app(IOrderManager::class);

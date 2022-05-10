@@ -67,23 +67,4 @@ class UserTest extends TestCase
             ->assertStatus(200);
     }
 
-    public function testUserIsUpdateImageSuccessfully()
-    {
-//        $this->faker = Faker::create();
-//        $payload = [
-//            'file' => new FileImage($this->faker->name,$this->faker->file($sourceDir = false, $targetDir = false, false) ),
-//        ];
-//        $this->json('post', 'api/v1/user/update/3', $payload['file'])
-//            ->assertStatus(200);
-    }
-    public function testUserIsResetPasswordSuccessfully() {
-//        $user = User::inRandomOrder()->limit(1)->first();
-//        $payload = [
-//            'password' =>$user->password,
-//            'old_password' => $user->password,
-//            'confirm_password' => $user->password,
-//        ];
-//        $this->json('post', 'api/v1/password/password-reset',$payload)
-//            ->assertStatus(200);
-    }
 }

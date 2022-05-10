@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Currency;
 
 use App\Models\Currency;
 use Session;
+use function session;
 
-class CouponConvertion
+class CurrencyConvertion
 {
     protected static $container;
 
@@ -19,16 +20,32 @@ class CouponConvertion
     }
     public static function convert($sum,$originCurrencyCode = 'RUB',$targetCurrencyCode = null) {
         self::loadContainer();
-        \Log::info('124');
         $originCurrency = self::$container[$originCurrencyCode];
 
         if(is_null($targetCurrencyCode)) {
-            $targetCurrencyCode = session()->get('coupon','RUB');
+            if(session()->has('currency')) {
+                $targetCurrencyCode = session()->get('currency','RUB');
+            }
+            if(session()->has('coupon')) {
+                $targetCurrencyCode = session()->get('coupon','RUB');
+            }
+            if(!session()->has('coupon') and !session()->has('currency')) {
+                $targetCurrencyCode = 'RUB';
+            }
         }
 
         $targetCurrency = self::$container[$targetCurrencyCode];
-
-        return $sum * $originCurrency->rate * $targetCurrency->rate;
+        $gvn = 0;
+        if(session()->has('currency')) {
+            $gvn = $sum * $originCurrency->rate * $targetCurrency->rate;
+        }
+        if(session()->has('coupon')) {
+            $gvn = $sum * (1 - session()->get('coupon_value') / 100);
+        }
+        if(!session()->has('coupon') and !session()->has('currency')) {
+            $gvn = $sum * $originCurrency->rate * $targetCurrency->rate;
+        }
+        return $gvn;
     }
     public static function getCurrencies()
     {
@@ -38,7 +55,7 @@ class CouponConvertion
     }
     public static function getCurrencySymbol() {
         self::loadContainer();
-        $currencyFromSession = \Session::get('currency','RUB');
+        $currencyFromSession = Session::get('currency','RUB');
         $currency = self::$container[$currencyFromSession];
         return $currency->symbol;
     }

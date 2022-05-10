@@ -7,8 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CouponRequest;
 use App\Models\Coupon;
 use App\Models\Currency;
-use App\Services\CurrencyRates;
-use Illuminate\Http\Request;
 
 class CouponController extends Controller
 {
@@ -29,7 +27,7 @@ class CouponController extends Controller
         ]);
         return response()->json(['status'=>'Coupon made successfully'],200);
     }
-    public function changeCurrency($coupon)
+    public function changeCurrency(string $coupon)
     {
         session()->forget('currency');
         $cpn = Coupon::where('code',$coupon)->firstOrFail();

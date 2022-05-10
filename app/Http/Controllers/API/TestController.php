@@ -4,16 +4,19 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
-use App\Models\Favorite;
+use App\Models\ProductPrice;
 use App\Models\User;
 use App\Products;
-use App\Services\Test\DemoOne;
-use App\Services\Test\DemoOneInterface;
+use App\Services\User\UserIndexService;
+use Faker\Factory as Faker;
 
 class TestController extends Controller
 {
     public function index()
     {
-        dd(User::inRandomOrder()->limit(1)->first());
+        $product = Products::where('id', 550)
+            ->with(['productprice:id,price'])
+            ->firstOrFail();
+        dd($product);
     }
 }

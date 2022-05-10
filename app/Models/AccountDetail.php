@@ -9,10 +9,12 @@ class AccountDetail extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'id',
         'first_name',
         'last_name',
         'organization',
         'location',
+        'phone',
         'birthday',
     ];
     protected $table = 'account_details';

@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Images;
 use Image;
-final class ImageService
+use function public_path;
+
+final class ImageService implements ImageServiceInterface
 {
     public static function InvertionImage($file) {
         $input['file'] = time().'.'.$file->getClientOriginalExtension();

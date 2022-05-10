@@ -7,65 +7,50 @@ use App\Models\User;
 
 class UserObserver
 {
-    /**
-     * Handle the User "created" event.
-     *
-     * @param  \App\Models\User  $user
-     * @return void
-     */
     public function created(User $user)
     {
-        $details = new AccountDetail();
-        $details->id = $user->id;
-        $details->first_name = '';
-        $details->last_name = '';
-        $details->organization = '';
-        $details->location = '';
-        $details->phone = '';
-        $details->birthday = Carbon::now()->format('Y-m-d');;
-        $details->save();
+        AccountDetail::create([
+            'id'=>$user->id,
+            'first_name'=>'',
+            'last_name'=>'',
+            'organization'=>'',
+            'location'=>'',
+            'phone'=>'',
+            'birthday'=>Carbon::now()->format('Y-m-d')
+        ]);
+        activity()
+            ->performedOn($user)
+            ->causedBy(auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null)
+            ->event('create')
+            ->inLog('create')
+            ->withProperties(['user' => auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null,'this_user'=>$user->id])
+            ->log('create user');
     }
-
-    /**
-     * Handle the User "updated" event.
-     *
-     * @param  \App\Models\User  $user
-     * @return void
-     */
     public function updated(User $user)
     {
-        //
+        activity()
+            ->performedOn($user)
+            ->causedBy(auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null)
+            ->event('update')
+            ->inLog('update')
+            ->withProperties(['user' => auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null,'this_user'=>$user->id])
+            ->log('update user');
     }
-
-    /**
-     * Handle the User "deleted" event.
-     *
-     * @param  \App\Models\User  $user
-     * @return void
-     */
     public function deleted(User $user)
     {
-        $details = AccountDetail::where('id',$user->id)->firstOrFail();
-       $details->delete();
+       AccountDetail::where('id',$user->id)->delete();
+        activity()
+            ->performedOn($user)
+            ->causedBy(auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null)
+            ->event('delete')
+            ->inLog('delete')
+            ->withProperties(['user' => auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null,'this_user'=>$user->id])
+            ->log('delete user');
     }
-
-    /**
-     * Handle the User "restored" event.
-     *
-     * @param  \App\Models\User  $user
-     * @return void
-     */
     public function restored(User $user)
     {
         //
     }
-
-    /**
-     * Handle the User "force deleted" event.
-     *
-     * @param  \App\Models\User  $user
-     * @return void
-     */
     public function forceDeleted(User $user)
     {
         //

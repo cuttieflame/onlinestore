@@ -10,6 +10,7 @@ use App\Http\Resources\CartResource;
 use App\Http\Resources\ProductResource;
 use App\Jobs\CartQuantity;
 use App\Products;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use App\Models\Cart;
 use Carbon\Carbon;
@@ -29,7 +30,6 @@ class CartController extends Controller implements CartInterface
         $products = Cart::with(['product' => function ($q) {
             $q->withAttributeOptions(['pr-price']);
         }])
-//            ->where(["session_id"=>"rhVxbdVkfejke30fm4gx7NKuw42YYlOGZK2kqTci"])
             ->where(["session_id" => session()->getId()])
             ->get();
         $times = ["now"=>Carbon::now()->format('d.m.Y'),"not_now"=>Carbon::now()->addDays(2)->format('d.m.Y')];
@@ -37,9 +37,14 @@ class CartController extends Controller implements CartInterface
    return response()->json(['products'=>new CartCollection($products),'times'=>$times],200);
     }
     public function add($product_id) {
-        $product = Products::where('id',$product_id)
-            ->with(['productprice'])
-            ->first();
+        try {
+            $product = Products::where('id', $product_id)
+                ->with(['productprice:id,price'])
+                ->firstOrFail();
+        }
+        catch(ModelNotFoundException $exception) {
+            return response()->json(['status'=>'Нет такого продукта'],400);
+        }
         if($cart = Cart::where([
             "session_id" => session()->getId(),
             "product_id" => $product->id
@@ -52,7 +57,7 @@ class CartController extends Controller implements CartInterface
                 "session_id" => session()->getId(),
                 "product_id" => $product->id,
                 "user_id" => auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null,
-                "price" => $product->productprice->price,
+                "price" => $product->productprice->price ? $product->productprice->price : 0,
             ]);
         }
         return response()->json(['status'=>'Успешно добавлена'],200);

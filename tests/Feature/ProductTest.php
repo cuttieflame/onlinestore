@@ -55,8 +55,8 @@ class ProductTest extends TestCase
 
     }
     //загрузка фото продукта
-    public function testProductUploadImageSuccessfully()
-    {
+//    public function testProductUploadImageSuccessfully()
+//    {
 //        $this->faker = Faker::create();
 //        $product = Products::create([
 //            'entity_id'=>1,
@@ -72,7 +72,7 @@ class ProductTest extends TestCase
 //        );
 //        $this->json('post', "api/v1/products/image/$product->id",$payload)
 //        ->assertStatus(200);
-    }
+//    }
     //просмотр пользовательских продуктов
     public function testProductUserShowSuccessfully()
     {

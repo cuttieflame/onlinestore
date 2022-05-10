@@ -2,27 +2,38 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Contracts\SubscriptionInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CustomerBillingCollection;
 use App\Models\Payment;
 use App\Models\Subscription;
 use App\Models\SubscriptionItem;
 use App\Models\User;
-use App\Services\DateService;
-use App\Services\GetIpAdress;
+use App\Services\Date\DateService;
 use App\Services\PaymentMethodService;
 use App\Services\Stripe\IStripeManager;
-use App\Services\UserIndexService;
+use App\Services\User\UserIndexService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
-use Laravel\Cashier\Events\WebhookReceived;
+use Illuminate\Support\Facades\Log;
 
-class SubscriptionController extends Controller
+class SubscriptionController extends Controller implements SubscriptionInterface
 {
+    private $dateService;
+    public function __construct(DateService $dateService)
+    {
+        $this->dateService = $dateService;
+    }
+
     public function index() {
-        $user = User::find(3);
+        try {
+            $user = User::findOrFail(auth()->user()->id);
+        }
+        catch(ModelNotFoundException $exception) {
+            return response()->json(['error'=>'Ошибка'],400);
+        }
         $abc = app(IStripeManager::class);
         $service = $abc->make('stripe');
-        $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
         $all_customers = $service->getAllCustomers();
         foreach($all_customers as $elem) {
             if($elem->metadata->user_id == $user->id) {
@@ -34,16 +45,10 @@ class SubscriptionController extends Controller
                 $customer = $service->createCustomer($user->id);
             }
         }
-        $id = 0;
-        if($customer->id) {
-            $id = $customer->id;
-        }
-        else {
-            $id = $customer->metadata->user_id;
-        }
+        $id = $customer->id ? $customer->id : $customer->metadata->user_id;
         $checkout = $service->createTestCheckoutSession($id,$user->id);
         $sub = $service->createSubscription($customer->id);
-        return response()->json(['check'=>$checkout,'sub'=>$sub]);
+        return response()->json(['check'=>$checkout,'sub'=>$sub],200);
     }
     public function webhook(Request $request)
     {
@@ -51,78 +56,65 @@ class SubscriptionController extends Controller
         $arr = $request;
         if($arr['type'] == 'payment_intent.succeeded') {
             $prod = $arr['data']['object']['charges']['data'][0];
-            $payment_pi = $prod['payment_intent'];
-            $payment_pm = $prod['payment_method'];
-            $payment_amount = $prod['amount'] / 100;
-            $payment_last4 = $prod['payment_method_details']['card']['last4'];
-            $payment_card_brand = $prod['payment_method_details']['card']['brand'];
-            $payment_country = $prod['payment_method_details']['card']['country'];
-            $payment_currency = $prod['currency'];
-            $customer_payment_name = $prod['billing_details']['name'];
-            $customer_payment_id = $prod['customer'];
-            $payment_risk_level = $prod['outcome']['risk_level'];
-            $payment_risk_score = $prod['outcome']['risk_score'];
             $user_payment_customer = $stripe->customers->retrieve(
-                $customer_payment_id,
+                $prod['customer'],
                 []
             );
-            $product_payment = new Payment();
-            $product_payment->user_id = $user_payment_customer->metadata->user_id;
-            $product_payment->name = $customer_payment_name;
-            $product_payment->currency = $payment_currency;
-            $product_payment->amount = $payment_amount;
-            $product_payment->last4 = $payment_last4;
-            $product_payment->card_brand = $payment_card_brand;
-            $product_payment->country = $payment_country;
-            $product_payment->customer = $user_payment_customer->id;
-            $product_payment->risk_level = $payment_risk_level;
-            $product_payment->risk_score = $payment_risk_score;
-            $product_payment->pi = $payment_pi;
-            $product_payment->pm = $payment_pm;
-            $product_payment->save();
-
+            Payment::create([
+                'user_id'=>$user_payment_customer->metadata->user_id,
+                'name'=>$prod['billing_details']['name'],
+                'currency'=>$prod['currency'],
+                'amount'=>$prod['amount'] / 100,
+                'last4'=>$prod['payment_method_details']['card']['last4'],
+                'card_brand'=>$prod['payment_method_details']['card']['brand'],
+                'country'=>$prod['payment_method_details']['card']['country'],
+                'customer'=>$user_payment_customer->id,
+                'risk_level'=>$prod['outcome']['risk_level'],
+                'risk_score'=>$prod['outcome']['risk_score'],
+                'pi'=>$prod['payment_intent'],
+                'pm'=>$prod['payment_method'],
+            ]);
         }
         if ($arr['type'] == 'invoice.created') {
-            $customer = $arr['data']['object']['customer'];
             $user_customer = $stripe->customers->retrieve(
-                $customer,
+                $arr['data']['object']['customer'],
                 []
             );
-            $user_id = $user_customer->metadata->user_id;
-            $product_prod = $arr['data']['object']['lines']['data'][0]['plan']['product'];
-            $price = $arr['data']['object']['lines']['data'][0]['plan']['id'];
             $stripe_product = $stripe->products->retrieve(
                 'prod_LUHfmTvmaDjbfK',
                 []
             );
             $stripe_id = SubscriptionItem::where('stripe_id', $arr['data']['object']['lines']['data'][0]['plan']['product'])
                 ->firstOrCreate([
-                        'stripe_id' => $product_prod,
+                        'stripe_id' => $arr['data']['object']['lines']['data'][0]['plan']['product'],
                         'stripe_product' => $stripe_product->name,
-                        'stripe_price' => $price,
+                        'stripe_price' => $arr['data']['object']['lines']['data'][0]['plan']['id'],
                         'quantity' => 1,
                     ]
                 );
-            $sub = new Subscription();
-            $sub->user_id = $user_id;
-            $sub->name = $stripe_product->name;
-            $sub->stripe_id = $stripe_id->id;
-            $sub->stripe_price = $price;
             $abc = $arr['data']['object'];
-            $sub->stripe_status = $abc['status'];
-            $sub->quantity = $abc['lines']['data'][0]['quantity'];
+            $trial_ends_at = '';
+            $ends_at = '';
             if ($abc['lines']['data'][0]['plan']['trial_period_days'] == '') {
-                $sub->trial_ends_at = date('Y-m-d');
-                $sub->ends_at = DateService::numberToDate($abc['lines']['data'][0]['period']['end']);
+                $trial_ends_at = date('Y-m-d');
+                $ends_at = DateService::numberToDate($abc['lines']['data'][0]['period']['end']);
             } else {
-                $sub->trial_ends_at = $abc['lines']['data'][0]['plan']['trial_period_days'];
-                $sub->ends_at = '';
+                $trial_ends_at = $abc['lines']['data'][0]['plan']['trial_period_days'];
+                $ends_at = '';
             }
-            $sub->created_at = DateService::numberToDate($abc['lines']['data'][0]['period']['start']);
-            $sub->updated_at = (string)$abc['created'];
-            $sub->invoice_id = $abc['id'];
-            $sub->save();
-
+            Subscription::create([
+                'user_id'=>$user_customer->metadata->user_id,
+                'name'=>$stripe_product->name,
+                'stripe_id'=>$stripe_id->id,
+                'stripe_price'=>$arr['data']['object']['lines']['data'][0]['plan']['id'],
+                'stripe_status'=>$abc['status'],
+                'quantity'=>$abc['lines']['data'][0]['quantity'],
+                'trial_ends_at'=>$trial_ends_at,
+                'ends_at'=>$ends_at,
+                'created_at'=>DateService::numberToDate($abc['lines']['data'][0]['period']['start']),
+                'updated_at'=>(string)$abc['created'],
+                'invoice_id'=>$abc['id'],
+            ]);
             $endpoint_secret = env('WEBHOOK_KEY');
             $payload = @file_get_contents('php://input');
             $sig_header = $_SERVER['HTTP_STRIPE_SIGNATURE'];
@@ -137,108 +129,126 @@ class SubscriptionController extends Controller
                 exit();
             }
             if ($request->type == 'checkout.session.completed') {
-                \Log::info("its all done");
+                Log::info("its all done");
             }
-            return response()->json(["status" => "success"]);
         }
+        return response()->json(['webhook'],200);
     }
     public function getAllProducts(Request $request) {
-        $stripe = new \Stripe\StripeClient(env('STRIPE_SECRET'));
+        $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
         $products = $stripe->products->all();
         $subscription = $stripe->subscriptions->all();
-
-        return response()->json(['products'=>$products,'subscription'=>$subscription]);
+        return response()->json(['products'=>$products,'subscription'=>$subscription],200);
     }
     public function addProduct() {
         $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
-        $product = $stripe->products->create([
-            'name' => 'Gold Special',
-            'amount'=>500,
-            'description'=>'',
+        $stripe->products->create([
+            'name' => 'name',
+            'metadata' => [
+                'price'=>123,
+                'user_id'=>auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null,
+            ],
         ]);
-        dd($product);
+        return response()->json(['status'=>'Товар успешно создан'],200);
     }
-    public function addCustomer($id,Request $request) {
-//        $a = GetIpAdress::getIp(); //ip-адрес
-        $user = UserIndexService::getUser($id);
-
-        $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
-        $customers = $stripe->customers->all();
-        foreach($customers as $elem) {
-            if(preg_replace('/\D+/', '', $elem->description) != $user->id) {
-                $phone = ($user->phone == '') ? null : $user->phone;
-                $stripe->customers->create([
-                'description' => 'Description',
-                "metadata" => array(
-                        "user_id" => $user->id,
-                    ),
-                'name'=>$user->name,
-                'email'=>$user->email,
-                'phone'=>$phone,
-                ]);
-            }
-            else {
-                return response()->json(['status'=>'Такой customer уже существует']);
-            }
+    public function addCustomer(int $id,Request $request) {
+        try {
+            $user = UserIndexService::getUser($id);
         }
-    }
-    public function getProducts($id) {
-        $user = UserIndexService::getUser($id);
+        catch(ModelNotFoundException $exception) {
+            return response()->json(['error'=>'Ошибка'],400);
+        }
         $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
-        $subs = $stripe->subscriptions->retrieve(
-            $user->customer_id,
-            []
-        );
-        dd($subs);
-    }
-    public function getUserSubscriptions() {
-        $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
-//        $user = User::find(auth()->user()->id);
-        $user = User::find(3);
         $search = 'metadata[\'user_id\']:'."'$user->id'";
         $customer = $stripe->customers->search([
             'query' => $search,
         ]);
-        $customer_id = $customer['data'][0]->id;
-        $cards = $stripe->paymentMethods->all([
-            'customer' => $customer_id,
-            'type' => 'card',
-        ]);
-        $arr_cards = [];
-        foreach($cards as $card) {
-            $arr_cards[] = PaymentMethodService::makeCardParametr($card);
+        if(!$customer->data) {
+            $phone = ($user->phone == '') ? null : $user->phone;
+            $stripe->customers->create([
+                'description' => 'Description',
+                "metadata" => array(
+                    "user_id" => $user->id,
+                ),
+                'name'=>$user->name,
+                'email'=>$user->email,
+                'phone'=>$phone,
+            ]);
         }
-        $cstmr = $stripe->customers->retrieve(
-            $customer_id,
-            []
-        );
-        $arr = [];
-        $arr1 = [];
-        $all_subscriptions = $stripe->subscriptions->all();
-        $customer_items = Subscription::where('user_id',$user->id)->with('subscriptionItems')->get();
-        $i = 0;
-        foreach($customer_items as $elem) {
-            $arr[] = $stripe->products->retrieve(
-                $elem->subscriptionItems->stripe_id,
-                []
-            );
-            $arr1[] = $stripe->invoices->retrieve(
-                $elem->invoice_id,
-                []
-            );
-
-            $elem->price = $arr[$i]->metadata->price;
-            $elem->currency = $arr1[$i]->currency;
-            $elem->start = DateService::numberToDate($arr1[$i]['lines']['data'][0]['period']['start']);
-            $elem->end = DateService::numberToDate($arr1[$i]['lines']['data'][0]['period']['end']);
-            $elem->transaction_id = $elem->subscriptionItems->stripe_id;
-            $elem->transaction_date = $arr1[$i]->created;
-            $elem->status = $arr1[$i]->paid;
-            $elem->amount = $arr[$i]->metadata->price;
-            $i = $i + 1;
-
+        else {
+            return response()->json(['status'=>'Error'],400);
+        }
+        return response()->json(['status'=>'Пользователь успешно добавлен'],200);
     }
-        return response()->json([new CustomerBillingCollection($customer_items),$arr_cards]);
+    public function getProducts(int $id) {
+        try {
+            $user = UserIndexService::getUser($id);
         }
+        catch(ModelNotFoundException $exception) {
+            return response()->json(['error'=>'Ошибка'],400);
+        }
+        $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
+        $search = 'metadata[\'user_id\']:'."'$user->id'";
+        $customer = $stripe->customers->search([
+            'query' => $search,
+        ]);
+        if(!$customer->data) {
+            $stripe->customers->create([
+                "metadata" => array("user_id" => $user->id,),
+                'name'=>$user->name,
+                'email'=>$user->email,
+                'phone'=>($user->phone == '') ? null : $user->phone,
+            ]);
+            return response()->json(['status'=>'Пользователь добавлен'],200);
+        }
+        else {
+            $subs = $stripe->subscriptions->retrieve(
+                $customer['data'][0]->id
+                []
+            );
+            return response()->json(['subs'=>$subs],200);
+        }
+    }
+    public function getUserSubscriptions() {
+        $abc = app(IStripeManager::class);
+        $service = $abc->make('stripe');
+        try {
+            $user = User::findOrFail(auth()->user()->id);
+        }
+        catch(ModelNotFoundException $exception) {
+            return response()->json(['error'=>'Ошибка'],400);
+        }
+        $search = 'metadata[\'user_id\']:'."'$user->id'";
+        $customer = $service->customerSearch($search);
+        if(!$customer->data) {
+            $service->createCustomer($user->id,$user->name,$user->email,($user->phone == '') ? null : $user->phone);
+            return response()->json(['status'=>'Пользователь создан,так как не был создан раньше'],200);
+        }
+        else {
+            $cards = $service->getAllPaymentMethods($customer['data'][0]->id,'card');
+            $arr_cards = [];
+            foreach ($cards as $card) {
+                $arr_cards[] = PaymentMethodService::makeCardParametr($card);
+            }
+            $customer_items = Subscription::where('user_id', $user->id)->with('subscriptionItems')->get();
+            $products = [];
+            $invoices = [];
+            $i = 0;
+            foreach ($customer_items as $elem) {
+                $products[] = $service->productRetrieve($elem->subscriptionItems->stripe_id);
+                $invoices[] = $service->invoceRetrieve($elem->invoice_id);
+                $elem->price = $products[$i]->metadata->price;
+                $elem->currency = $invoices[$i]->currency;
+                $elem->start = $this->dateService->numberToDate($invoices[$i]['lines']['data'][0]['period']['start']);
+                $elem->end = $this->dateService->numberToDate($invoices[$i]['lines']['data'][0]['period']['end']);
+                $elem->transaction_id = $elem->subscriptionItems->stripe_id;
+                $elem->transaction_date = $invoices[$i]->created;
+                $elem->status = $invoices[$i]->paid;
+                $elem->amount = $products[$i]->metadata->price;
+                $i = $i + 1;
+            }
+            return response()->json([new CustomerBillingCollection($customer_items), $arr_cards], 200);
+        }
+    }
 
 }

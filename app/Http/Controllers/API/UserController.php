@@ -3,30 +3,29 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\API;
 
+use App\Contracts\UserInterface;
 use App\DataTransferObjects\UserData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\UpdateImageRequest;
 use App\Http\Requests\UserAccountRequest;
-use App\Http\Resources\UserCollection;
 use App\Http\Resources\UserResource;
 use App\Jobs\UpdateImage;
 use App\Models\User;
-use App\Services\ImageService;
-use App\Services\UserIndexService;
+use App\Services\Images\ImageService;
+use App\Services\User\UserIndexService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Image;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Hash;
 
-class UserController extends Controller
+class UserController extends Controller implements UserInterface
 {
     public function index(Request $request)
     {
         $user = UserIndexService::getUser(155);
         return response()->json(['data'=>new UserResource($user)])
-        ->setStatusCode(Response::HTTP_OK, Response::$statusTexts[Response::HTTP_OK]);;
+        ->setStatusCode(Response::HTTP_OK, Response::$statusTexts[Response::HTTP_OK]);
     }
     public function update(UserAccountRequest $request,int $id)
     {
@@ -56,7 +55,7 @@ class UserController extends Controller
         UpdateImage::dispatch($user,$a)->delay(now()->addMinutes(5));
         return response()->json(['status'=>'Аватарка обновлена'],200);
     }
-    public function destroy($id)
+    public function destroy(int $id)
     {
         try {
             $user = User::findOrFail($id);

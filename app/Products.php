@@ -4,20 +4,18 @@ namespace App;
 
 
 use App\Models\Image;
-use App\Models\ProductView;
 use App\Models\ProductCategory;
 use App\Models\ProductInfo;
 use App\Models\ProductPrice;
-use App\Services\CurrencyConvertion;
+use App\Models\ProductView;
 use App\Services\Filters\FilterBuilder;
 use App\Traits\Imageable;
-//use Kirschbaum\PowerJoins\PowerJoins;
-use Laravel\Scout\Searchable;
-
 use Eav\Attribute;
 use Eav\AttributeOption;
 use Eav\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+//use Kirschbaum\PowerJoins\PowerJoins;
 
 class Products extends Model
 {

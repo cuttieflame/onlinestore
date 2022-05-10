@@ -2,9 +2,6 @@
 
 namespace App\Models;
 
-use App\Services\CouponConvertion;
-use App\Services\CurrencyConvertion;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 

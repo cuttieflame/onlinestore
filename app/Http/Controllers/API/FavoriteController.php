@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Contracts\FavoriteInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CartCollection;
 use App\Models\Cart;
 use App\Models\Favorite;
-use App\Models\Product;
 use App\Products;
 
-class FavoriteController extends Controller
+class FavoriteController extends Controller implements FavoriteInterface
 {
     public function userFavorites($id = null) {
         $user_id = $id ? $id : (auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null);
@@ -19,7 +19,6 @@ class FavoriteController extends Controller
         }
         return Favorite::with(["product"])->where(["user_id" => $user_id])->get();
     }
-
     public function get() {
         $products = Favorite::with(['product' => function ($q) {
             $q->withAttributeOptions(['pr-price']);
@@ -28,7 +27,7 @@ class FavoriteController extends Controller
             ->get();
         return response()->json(['products'=>new CartCollection($products)],200);
     }
-    public function add($product_id) {
+    public function add(int $product_id) {
         $product = Products::where('id',$product_id)
             ->with(['productprice'])
             ->first();

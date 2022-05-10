@@ -2,41 +2,42 @@
 declare(strict_types=1);
 namespace App\Http\Controllers\API;
 
+use App\Contracts\CategoryInterface;
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Products;
-use App\Services\ProductArrayService;
+use App\Services\Arr\ArrayServiceInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
-class CategoryController extends Controller
+class CategoryController extends Controller implements CategoryInterface
 {
-    private $product;
-    private $brand;
-    private $category;
-    private $productArrayService;
-    public function __construct(Products $product,Brand $brand,Category $category,ProductArrayService $productArrayService)
+    private Products $product;
+    private Brand $brand;
+    private Category $category;
+    private ArrayServiceInterface $arrayService;
+    public function __construct(Products $product,Brand $brand,Category $category,ArrayServiceInterface $arrayService)
     {
         $this->product = $product;
         $this->brand = $brand;
         $this->category = $category;
-        $this->productArrayService = $productArrayService;
+        $this->arrayService = $arrayService;
     }
     public function index(Request $request,$id = 0): \Illuminate\Http\JsonResponse
     {
         if($id != 0) {
             $a = preg_replace('/\D+/', '', $id);
-            $subbrands = \Cache::remember('subbrands', '14400', function () {
+            $seconds = 14400;
+            $subbrands = Cache::remember('subbrands', $seconds, function () {
                 return $this->brand->select(['id','name','category_id','categories'])->get();
             });
-            $bss = $this->productArrayService->makeBrandArray($subbrands,$a);
+            $brands = $this->arrayService->makeBrandArray($subbrands,$a);
             $builder = $this->product->withAttributeOptions(['pr-price','pr-ctgrs'])
                 ->join('product_categories', 'product_categories.product_id', '=', 'products.id')
                 ->where('product_categories.category_id',$a);
-            $arrmax = [];
 
-            $ctgr = $this->productArrayService->makeRelatedCategories($builder);
+            $ctgr = $this->arrayService->makeRelatedCategories($builder);
             $rld_itms = array_unique($ctgr[1]);
             $related_items = $this->category->whereIn('id',$rld_itms)->where('parent_id',null)
                 ->with('childrencategories')
@@ -88,7 +89,7 @@ class CategoryController extends Controller
                         ['value', 'like', "%{$query}%"],
                     ]);
                 });
-            $ctgr = $this->productArrayService->makeRelatedCategories($builder);
+            $ctgr = $this->arrayService->makeRelatedCategories($builder);
 
 
             $avg = (min($ctgr[0]) + max($ctgr[0])) * 0.5;
@@ -122,13 +123,13 @@ class CategoryController extends Controller
                 }
             }
 
-            $subbrands = \DB::table('brands')->select(['id','name','category_id','categories'])->get();
-            $bss = $this->productArrayService->makeBrandArray($subbrands,1);
-            $related_items = \DB::table('categories')->whereIn('id',array_unique($ctgr[1]))->get();
+            $subbrands = DB::table('brands')->select(['id','name','category_id','categories'])->get();
+            $brands = $this->arrayService->makeBrandArray($subbrands,1);
+            $related_items = DB::table('categories')->whereIn('id',array_unique($ctgr[1]))->get();
             $products = $builder->limit(200)->paginate(10);
 
         }
-        return response()->json(['products'=>$products,'related_items'=>$related_items,'brands'=>$bss]);
+        return response()->json(['products'=>$products,'related_items'=>$related_items,'brands'=>$brands]);
     }
 
 }

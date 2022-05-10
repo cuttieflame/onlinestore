@@ -8,18 +8,18 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\UploadProductImageRequest;
 use App\Http\Resources\ProductCollection;
-use App\Models\Currency;
-use App\Models\ProductView;
 use App\Jobs\UploadProductAndAttributeOptions;
 use App\Models\Category;
+use App\Models\Currency;
 use App\Models\Image;
 use App\Models\ProductCategory;
 use App\Models\ProductPrice;
 use App\Models\User;
 use App\Products;
-use App\Services\ArrayOptionService;
-use App\Services\ImageService;
-use App\Services\ImageToObjectArray;
+use App\Services\Arr\ArrayServiceInterface;
+use App\Services\Images\ImageServiceInterface;
+use App\Services\Images\ImageToObjectArray;
+use App\Services\Product\ProductServiceInterface;
 use App\Services\Stripe\IStripeManager;
 use Eav\AttributeOption;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -32,20 +32,21 @@ class ProductController extends Controller implements ProductInterface
     private $product;
     private $category;
     private $currency;
-    private $product_view;
-    private $arrayOptionService;
-    public function __construct(Products $product, Category $category, Currency $currency, ProductView $product_view,ArrayOptionService $arrayOptionService)
+    private $productService;
+    private $arrayService;
+    private $imageService;
+    public function __construct(Products $product, Category $category, Currency $currency, ProductServiceInterface $productService,ArrayServiceInterface $arrayService,ImageServiceInterface $imageService)
     {
         $this->product = $product;
         $this->category = $category;
         $this->currency = $currency;
-        $this->product_view = $product_view;
-        $this->arrayOptionService = $arrayOptionService;
+        $this->productService = $productService;
+        $this->arrayService = $arrayService;
+        $this->imageService = $imageService;
     }
-    public function index(Request $request)
+    public function index(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
-            $brands = DB::table('brands')->select(['id','name'])->get();
             $seconds = 14400;
             $categories = Cache::remember('categories', $seconds, function () {
                 return $this->category->select(['id','parent_id','name'])->orderBy('id')->limit(25)->get();
@@ -64,10 +65,7 @@ class ProductController extends Controller implements ProductInterface
         catch(ModelNotFoundException $exception) {
             return response()->json(['error'=>'Error'],400);
         }
-        $crct = ['currencies'=>$currencies,'categories'=>$categories];
-
-        return response()->json(['product'=>new ProductCollection($products),'crct'=>$crct],200);
-
+        return response()->json(['product'=>new ProductCollection($products),'crct'=>['currencies'=>$currencies,'categories'=>$categories]],200);
     }
     public function userProduct(int $id,Request $request) {
         if($request->t == 'main') {
@@ -79,21 +77,16 @@ class ProductController extends Controller implements ProductInterface
             catch(ModelNotFoundException $exception) {
                 return response()->json(['error'=>'Product not found']);
             }
-            $this->product_view->createViewLog($product->id);
+            $this->productService->createViewLog($product->id);
             $abc = app(IStripeManager::class);
             $service = $abc->make('stripe');
             $search = 'metadata[\'product_id\']:'."'$id'";
-            $pr = $service->productsSearch($search);
+            $productSearch = $service->productsSearch($search);
             if(auth()->user()) {
                 $user = User::find(auth()->user()->id);
                 $search1 = 'metadata[\'user_id\']:'."'$user->id'";
                 $customer_id = $service->customerSearch($search1);
-                if($customer_id->data) {
-                    $checkout = $service->createCheckoutSession($customer_id,$id,$pr);
-                }
-                else {
-                    $checkout = null;
-                }
+                $checkout = $customer_id->data ? $service->createCheckoutSession($customer_id,$id,$productSearch) : null;
             }
             else {
                 $checkout = null;
@@ -115,21 +108,27 @@ class ProductController extends Controller implements ProductInterface
     public function store(ProductStoreRequest $request)
     {
         $validated = ProductData::fromRequest($request);
-        $options = ArrayOptionService::makeOptionArray($validated);
+        $options = $this->arrayService->makeOptionArray($validated);
         DB::beginTransaction();
         try {
             $id = DB::table('products')->insertGetId([
                 'entity_id' => 1,
                 'attribute_set_id' => 1
             ]);
-            $product = $this->product->find($id);
-            activity()
-                ->performedOn($product)
-                ->causedBy(auth()->user()->id)
-                ->event('create')
-                ->inLog('create')
-                ->withProperties(['user' => auth()->user()->id,'product'=>$id])
-                ->log('create product');
+        }
+        catch(\Exception $e) {
+            DB::rollback();
+            throw $e;
+        }
+        try {
+            $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
+            $stripe->products->create([
+                'name' =>(string)$validated->name,
+                'metadata' => [
+                    'price'=>(int)$validated->price,
+                    'user_id'=>auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null,
+                ],
+            ]);
         }
         catch(\Exception $e) {
             DB::rollback();
@@ -171,19 +170,17 @@ class ProductController extends Controller implements ProductInterface
         return response()->json(['status'=>'добавлен успешно'],200);
     }
     public function uploadProductImage(UploadProductImageRequest $request,int $id) {
-        $file = ImageService::InvertionImage($request->file('file'));
-        $files = ImageService::InvertionImages($request->file('files'));
+        $file = $this->imageService->InvertionImage($request->file('file'));
+        $files = $this->imageService->InvertionImages($request->file('files'));
         Image::create([
            'images'=>  ImageToObjectArray::make($files),
-            'product_id'=>$id
+           'product_id'=>$id
         ]);
         AttributeOption::where(['product_id'=>$id,'attribute_id'=>6])->update(['value' => $file]);
         return response()->json(['status'=>'Успешно загружены фотографии'],200);
     }
     public function delete(Request $request) {
-        foreach(explode(",", $request->pr) as $id) {
-           Products::where('id',$id)->delete();
-        }
+        $this->productService->productArrayDelete(explode(",", $request->pr));
         return response()->json(['status'=>'Успешно удалено'],200);
     }
     public function brandsandcategories() {

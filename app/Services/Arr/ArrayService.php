@@ -1,9 +1,18 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Arr;
 
-final class ProductArrayService
+class ArrayService implements ArrayServiceInterface
 {
+    public static function makeOptionArray($validated) {
+        $options = [
+            "name"=>$validated->name . '4',
+            "content"=>$validated->content . '5',
+            "main_image"=>$validated->main_image . '6',
+            "tags"=>$validated->tags . '7',
+        ];
+        return $options;
+    }
     public static function makeBrandArray($subbrands,$a) {
         $bss = [];
         foreach($subbrands as $elems) {
@@ -26,7 +35,7 @@ final class ProductArrayService
                 if($elem->childrenCategories) {
                     $arrctgr[] = $elem->id;
                 }
-                    $arrctgr[] = $elem->id;
+                $arrctgr[] = $elem->id;
             }
         }
         return [$arrmax,$arrctgr];

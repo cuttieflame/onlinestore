@@ -2,22 +2,16 @@
 
 namespace App\Observers;
 
-use App\Models\Product;
+use App\Products;
 use App\Models\ProductInfo;
 
 class ProductObserver
 {
-    /**
-     * Handle the Product "created" event.
-     *
-     * @param  \App\Models\Product  $product
-     * @return void
-     */
-    public function created(Product $product)
+    public function created(Products $product)
     {
-        $product_info = new ProductInfo();
-        $product_info->id = $product->id;
-        $product_info->name_attributes = '[
+        ProductInfo::create([
+           'id'=>$product->id,
+           'name_attributes'=> '[
 	{
         "name": "Specification",
         "id": "1"
@@ -34,8 +28,8 @@ class ProductObserver
            "name": "Seller profile",
          "id": "4"
       }
-]';
-        $product_info->attribute_info = '[
+    ]',
+            'attribute_info'=>'[
     {
         "text": "With supporting text below as a natural lead-in to additional content. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.Some great feature name here Lorem ipsum dolor sit amet consectetur Duis aute irure dolor in reprehenderit Optical heart sensor Easy fast and ver good Some great feature name here Modern style and design",
         "more_info": [
@@ -70,50 +64,43 @@ class ProductObserver
         "text": "Some other tab content or sample information now Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
         "more_info": ""
     }
-]';
-        $product_info->save();
+]'
+        ]);
+        activity()
+            ->performedOn($product)
+            ->causedBy(auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null)
+            ->event('create')
+            ->inLog('create')
+            ->withProperties(['user' => auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null,'product'=>$product->id])
+            ->log('create product');
     }
 
-    /**
-     * Handle the Product "updated" event.
-     *
-     * @param  \App\Models\Product  $product
-     * @return void
-     */
-    public function updated(Product $product)
+    public function updated(Products $product)
+    {
+        activity()
+            ->performedOn($product)
+            ->causedBy(auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null)
+            ->event('update')
+            ->inLog('update')
+            ->withProperties(['user' => auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null,'product'=>$product->id])
+            ->log('update product');
+    }
+    public function deleted(Products $product)
+    {
+        activity()
+            ->performedOn($product)
+            ->causedBy(auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null)
+            ->event('delete')
+            ->inLog('delete')
+            ->withProperties(['user' => auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null,'product'=>$product->id])
+            ->log('delete product');
+    }
+    public function restored(Products $product)
     {
         //
     }
 
-    /**
-     * Handle the Product "deleted" event.
-     *
-     * @param  \App\Models\Product  $product
-     * @return void
-     */
-    public function deleted(Product $product)
-    {
-        //
-    }
-
-    /**
-     * Handle the Product "restored" event.
-     *
-     * @param  \App\Models\Product  $product
-     * @return void
-     */
-    public function restored(Product $product)
-    {
-        //
-    }
-
-    /**
-     * Handle the Product "force deleted" event.
-     *
-     * @param  \App\Models\Product  $product
-     * @return void
-     */
-    public function forceDeleted(Product $product)
+    public function forceDeleted(Products $product)
     {
         //
     }

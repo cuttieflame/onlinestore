@@ -22,7 +22,6 @@ class VerificationController extends Controller
 
         return ['status' => 'verification-link-sent'];
     }
-
     public function verify(EmailVerificationRequest $request)
     {
         if ($request->user()->hasVerifiedEmail()) {
