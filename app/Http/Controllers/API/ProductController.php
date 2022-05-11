@@ -27,6 +27,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
+
 class ProductController extends Controller implements ProductInterface
 {
     private $product;
@@ -44,6 +45,27 @@ class ProductController extends Controller implements ProductInterface
         $this->arrayService = $arrayService;
         $this->imageService = $imageService;
     }
+    /**
+     * @OA\Get(
+     *      path="/products",
+     *      operationId="getProductsList",
+     *      tags={"Products"},
+     *      summary="Get list of products",
+     *      description="Returns list of products",
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Error",
+     *      )
+     *     )
+     */
     public function index(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
@@ -63,10 +85,33 @@ class ProductController extends Controller implements ProductInterface
                 ->get();
         }
         catch(ModelNotFoundException $exception) {
-            return response()->json(['error'=>'Error'],400);
+            return response()->json(['error'=>'Error'],403);
         }
         return response()->json(['product'=>new ProductCollection($products),'crct'=>['currencies'=>$currencies,'categories'=>$categories]],200);
     }
+
+    /**
+     * @OA\Get(
+     *      path="/products/{id}",
+     *      operationId="getUserProductsList",
+     *      tags={"Products"},
+     *      summary="Get list of user products",
+     *      description="Returns list of user products",
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *       ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Product not found",
+     *      )
+     *     )
+     */
+
     public function userProduct(int $id,Request $request) {
         if($request->t == 'main') {
             try {
@@ -75,7 +120,7 @@ class ProductController extends Controller implements ProductInterface
                     ->firstOrFail();
             }
             catch(ModelNotFoundException $exception) {
-                return response()->json(['error'=>'Product not found']);
+                return response()->json(['error'=>'Product not found'],403);
             }
             $this->productService->createViewLog($product->id);
             $abc = app(IStripeManager::class);
@@ -99,12 +144,39 @@ class ProductController extends Controller implements ProductInterface
                 $product = $builder->getOrFail();
             }
             catch(ModelNotFoundException $exception) {
-                return response()->json(['error'=>'Product not found']);
+                return response()->json(['error'=>'Product not found'],403);
             }
             $checkout = null;
         }
         return response()->json(['product'=>$product,'stripe'=>$checkout],200);
     }
+
+    /**
+     * @OA\Post(
+     *      path="/products/create",
+     *      operationId="storeProduct",
+     *      tags={"Products"},
+     *      summary="Store new produt",
+     *      description="Create new product",
+     *      @OA\Response(
+     *          response=201,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+
     public function store(ProductStoreRequest $request)
     {
         $validated = ProductData::fromRequest($request);
@@ -167,8 +239,44 @@ class ProductController extends Controller implements ProductInterface
             throw $e;
         }
         DB::commit();
-        return response()->json(['status'=>'добавлен успешно'],200);
+        return response()->json(['status'=>'добавлен успешно'],201);
     }
+
+    /**
+     * @OA\Post(
+     *      path="/products/image/{product_id}",
+     *      operationId="storeProductImage",
+     *      tags={"Products"},
+     *      summary="Store new product image",
+     *      description="Create new product image",
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="Product id",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=201,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+
     public function uploadProductImage(UploadProductImageRequest $request,int $id) {
         $file = $this->imageService->InvertionImage($request->file('file'));
         $files = $this->imageService->InvertionImages($request->file('files'));
@@ -177,12 +285,65 @@ class ProductController extends Controller implements ProductInterface
            'product_id'=>$id
         ]);
         AttributeOption::where(['product_id'=>$id,'attribute_id'=>6])->update(['value' => $file]);
-        return response()->json(['status'=>'Успешно загружены фотографии'],200);
+        return response()->json(['status'=>'Успешно загружены фотографии'],201);
     }
+
+    /**
+     * @OA\Delete(
+     *      path="/products/delete",
+     *      operationId="deleteProduct",
+     *      tags={"Products"},
+     *      summary="Delete existing product",
+     *      description="Delete a productt",
+     *      @OA\Parameter(
+     *         name="pr",
+     *         in="query",
+     *         description="Products ids",
+     *         required=true,
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+    *       )
+     */
+
     public function delete(Request $request) {
         $this->productService->productArrayDelete(explode(",", $request->pr));
         return response()->json(['status'=>'Успешно удалено'],200);
     }
+
+    /**
+     * @OA\Get(
+     *      path="/brands_categories",
+     *      operationId="getBrandsAndCategoriesList",
+     *      tags={"BrandsAndCategories"},
+     *      summary="Get list of brands and categories",
+     *      description="Returns list of brands and categories",
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Нет таких записей",
+     *      )
+     *     )
+     */
+
+
     public function brandsandcategories() {
         $seconds = 14400;
         try {
@@ -194,7 +355,7 @@ class ProductController extends Controller implements ProductInterface
             });
         }
         catch(ModelNotFoundException $exception) {
-            return response()->json(['error'=>'Нет таких записей'],400);
+            return response()->json(['error'=>'Нет таких записей'],403);
         }
         $crct = ['categories'=>$categories,'brands'=>$brands];
         return response()->json(['crct'=>$crct],200);

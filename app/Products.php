@@ -15,13 +15,31 @@ use Eav\AttributeOption;
 use Eav\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-//use Kirschbaum\PowerJoins\PowerJoins;
+/**
+ * @SWG\Definition(
+ *  definition="Products",
+ *  @SWG\Property(
+ *      property="id",
+ *      type="serial4"
+ *  ),
+ *  @SWG\Property(
+ *      property="entity_id",
+ *      type="integer(4)"
+ *  ),
+ *  @SWG\Property(
+ *      property="attribute_set_id",
+ *      type="integer(4)"
+ *  )
+ *  @SWG\Property(
+ *      property="user_id",
+ *      type="integer(8)"
+ *  )
+ * )
+ */
 
 class Products extends Model
 {
     use HasFactory;
-//    use Searchable;
-//    use PowerJoins;
     protected $table = "products";
     public $incrementing = false;
     const ENTITY  = 'product';

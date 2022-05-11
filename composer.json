@@ -9,6 +9,7 @@
         "algolia/algoliasearch-client-php": "^3.2",
         "algolia/scout-extended": "^2.0",
         "brick/money": "^0.5.3",
+        "darkaonline/l5-swagger": "^8.3",
         "denis660/laravel-centrifugo": "^2.1",
         "dragon-code/laravel-json-response": "^2.2",
         "elasticsearch/elasticsearch": "^7.17",
@@ -36,7 +37,7 @@
         "torann/geoip": "^3.0"
     },
     "require-dev": {
-        "dragon-code/pretty-routes": "^3.1",
+        "dragon-code/pretty-routes": "^3.2",
         "facade/ignition": "^2.5",
         "fakerphp/faker": "^1.9.1",
         "laravel/sail": "^1.0.1",

@@ -5,7 +5,9 @@ namespace App\Providers;
 use App\Models\PersonalAccessToken;
 use App\Models\Product;
 use App\Models\User;
+use App\Observers\ProductObserver;
 use App\Observers\UserObserver;
+use App\Products;
 use App\Providers\RepositoryServiceProvider;
 use App\Services\Arr\ArrayService;
 use App\Services\Arr\ArrayServiceInterface;
@@ -33,13 +35,17 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(\App\Services\Order\IOrderManager::class, function ($app) {
             return new \App\Services\Order\OrderManager($app);
         });
-        $this->app->bind(DemoOneInterface::class,function($app) {
-           return new DemoOne();
+//        $this->app->bind(DemoOneInterface::class,function($app) {
+//           return new DemoOne();
+//        });
+        $this->app->singleton(DemoOneInterface::class,function($app) {
+            return new DemoOne();
         });
         $this->app->bind(ArrayServiceInterface::class, ArrayService::class);
         $this->app->bind(ImageServiceInterface::class, ImageService::class);
         $this->app->bind(DateInterface::class, DateService::class);
         $this->app->bind(ProductServiceInterface::class, ProductService::class);
+        $this->app->register(\L5Swagger\L5SwaggerServiceProvider::class);
 //        $this->app->bind(ArrayServiceInterface::class,function($app) {
 //           return new ArrayService();
 //        });
@@ -49,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
     {
 
         User::observe(UserObserver::class);
+        Products::observe(ProductObserver::class);
 //        JsonResource::withoutWrapping();
 
 //        Product::observe(ProductObserver::class);

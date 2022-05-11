@@ -24,6 +24,7 @@ class CategoryController extends Controller implements CategoryInterface
         $this->category = $category;
         $this->arrayService = $arrayService;
     }
+
     public function index(Request $request,$id = 0): \Illuminate\Http\JsonResponse
     {
         if($id != 0) {

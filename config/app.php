@@ -86,6 +86,8 @@ return [
         Eav\Providers\LaravelServiceProvider::class,
         Laravel\Scout\ScoutServiceProvider::class,
         App\Providers\CustomServiceProvider::class,
+        L5Swagger\L5SwaggerServiceProvider::class,
+
 
 
     ],
