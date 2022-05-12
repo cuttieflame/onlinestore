@@ -7,17 +7,21 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\CartCollection;
 use App\Models\Cart;
 use App\Models\Favorite;
+use App\Models\User;
 use App\Products;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class FavoriteController extends Controller implements FavoriteInterface
 {
     public function userFavorites($id = null) {
+
         $user_id = $id ? $id : (auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null);
 
         if(is_null($user_id)) {
             return false;
         }
-        return Favorite::with(["product"])->where(["user_id" => $user_id])->get();
+        $favorites = Favorite::with(["product"])->where(["user_id" => $user_id])->get();
+        return response()->json($favorites,200);
     }
     public function get() {
         $products = Favorite::with(['product' => function ($q) {
@@ -47,7 +51,8 @@ class FavoriteController extends Controller implements FavoriteInterface
         return response()->json(['status'=>'Успешно добавлено в favorites'],200);
     }
     public function remove($id) {
-        return Favorite::destroy($id);
+        Favorite::destroy($id);
+        return response()->json(['status'=>'Успешно удалена запись'],200);
     }
     public function flush() {
         Favorite::where(["session_id" => session()->getId()])->delete();

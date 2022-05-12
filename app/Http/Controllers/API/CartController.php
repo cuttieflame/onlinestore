@@ -23,15 +23,43 @@ class CartController extends Controller implements CartInterface
         if(is_null($user_id)) {
             return false;
         }
-
-        return Cart::with(["product"])->where(["user_id" => $user_id])->get();
+        $carts = Cart::with(["product"])->where(["user_id" => $user_id])->get();
+        return response()->json($carts,200);
     }
+
+    /**
+     * @OA\Get(
+     *      path="/cart",
+     *      operationId="getUserCartList",
+     *      tags={"Carts"},
+     *      summary="Get list of user cart",
+     *      description="Returns list of user cart",
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *       ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Cart not found",
+     *      )
+     *     )
+     */
+
     public function get() {
-        $products = Cart::with(['product' => function ($q) {
-            $q->withAttributeOptions(['pr-price']);
-        }])
-            ->where(["session_id" => session()->getId()])
-            ->get();
+        try {
+            $products = Cart::with(['product' => function ($q) {
+                $q->withAttributeOptions(['pr-price']);
+            }])
+                ->where(["session_id" => session()->getId()])
+                ->getOrFail();
+        }
+        catch(ModelNotFoundException $exception) {
+            return response()->json(['status'=>'Ошибка'],403);
+        }
         $times = ["now"=>Carbon::now()->format('d.m.Y'),"not_now"=>Carbon::now()->addDays(2)->format('d.m.Y')];
 
    return response()->json(['products'=>new CartCollection($products),'times'=>$times],200);

@@ -71,6 +71,7 @@ use Illuminate\Support\Facades\Route;
 
     Route::get('currency/{currencyCode}',[CurrencyController::class,'changeCurrency']);
     Route::get('/currentValues',[CurrencyController::class,'current']);
+
     Route::get('/category/{id?}', [CategoryController::class, 'index']);
 
     Route::prefix('stripe')->group(function () {

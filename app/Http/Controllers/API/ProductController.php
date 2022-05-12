@@ -97,6 +97,12 @@ class ProductController extends Controller implements ProductInterface
      *      tags={"Products"},
      *      summary="Get list of user products",
      *      description="Returns list of user products",
+     *      @OA\Parameter(
+     *         name="t",
+     *         in="query",
+     *         description="query - main or dsh.Example-api/v1/products/1?t=main or 1?t=dsh",
+     *         required=true,
+     *      ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful operation",
@@ -111,6 +117,8 @@ class ProductController extends Controller implements ProductInterface
      *      )
      *     )
      */
+
+
 
     public function userProduct(int $id,Request $request) {
         if($request->t == 'main') {
@@ -154,7 +162,7 @@ class ProductController extends Controller implements ProductInterface
     /**
      * @OA\Post(
      *      path="/products/create",
-     *      operationId="storeProduct",
+     *      operationId="storeCoupon",
      *      tags={"Products"},
      *      summary="Store new produt",
      *      description="Create new product",

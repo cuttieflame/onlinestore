@@ -19,6 +19,184 @@
         }
     ],
     "paths": {
+        "/category/{id}": {
+            "get": {
+                "tags": [
+                    "Category"
+                ],
+                "summary": "Get list of categories",
+                "description": "Returns list of categories",
+                "operationId": "getCategories",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Category id,if id = 0, then it is needed for the search,if id > 0 its for categories",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "br",
+                        "in": "query",
+                        "description": "brands,example ?br=1,2,3,4 "
+                    },
+                    {
+                        "name": "o",
+                        "in": "query",
+                        "description": "parameters (pr-in|pr-de), it means that it sorts products by price increase, if pr-de, then vice versa by decrease"
+                    },
+                    {
+                        "name": "s",
+                        "in": "query",
+                        "description": "parameters (new|old) if (new) sorts by novelty and if (old) by old age"
+                    },
+                    {
+                        "name": "min",
+                        "in": "query",
+                        "description": "min price,example ?min=123"
+                    },
+                    {
+                        "name": "max",
+                        "in": "query",
+                        "description": "max price,example ?max=5000"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Category not found"
+                    }
+                }
+            }
+        },
+        "/coupons": {
+            "get": {
+                "tags": [
+                    "Coupons"
+                ],
+                "summary": "Get list of coupons",
+                "description": "Returns list of coupons",
+                "operationId": "getCouponsList",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                }
+            }
+        },
+        "/coupons/make": {
+            "post": {
+                "tags": [
+                    "Coupons"
+                ],
+                "summary": "Store new coupon",
+                "description": "Create new coupon",
+                "operationId": "storeProduct",
+                "responses": {
+                    "201": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                }
+            }
+        },
+        "/coupons/{coupon}": {
+            "get": {
+                "tags": [
+                    "Coupons"
+                ],
+                "summary": "Change currency",
+                "description": "Change coupon currency",
+                "operationId": "changeCouponCurrency",
+                "parameters": [
+                    {
+                        "name": "coupon",
+                        "in": "path",
+                        "description": "coupon slug",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Coupon not found"
+                    }
+                }
+            }
+        },
+        "/currency/{currencyCode}": {
+            "get": {
+                "tags": [
+                    "Currency"
+                ],
+                "summary": "change session currency",
+                "description": "change session currency",
+                "operationId": "changeSessionCurrency",
+                "parameters": [
+                    {
+                        "name": "currencyCode",
+                        "in": "path",
+                        "description": "Currency code",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Currency not found"
+                    }
+                }
+            }
+        },
+        "/currentValues": {
+            "get": {
+                "tags": [
+                    "Currency"
+                ],
+                "summary": "change currency",
+                "description": "change currency",
+                "operationId": "changeCurrency",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                }
+            }
+        },
         "/products": {
             "get": {
                 "tags": [
@@ -48,6 +226,14 @@
                 "summary": "Get list of user products",
                 "description": "Returns list of user products",
                 "operationId": "getUserProductsList",
+                "parameters": [
+                    {
+                        "name": "t",
+                        "in": "query",
+                        "description": "query - main or dsh.Example-api/v1/products/1?t=main or 1?t=dsh",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful operation"
@@ -68,7 +254,7 @@
                 ],
                 "summary": "Store new produt",
                 "description": "Create new product",
-                "operationId": "storeProduct",
+                "operationId": "storeCoupon",
                 "responses": {
                     "201": {
                         "description": "Successful operation"
