@@ -9,6 +9,9 @@ use App\Models\Coupon;
 use App\Models\Currency;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
+/**
+ *
+ */
 class CouponController extends Controller
 {
 
@@ -35,7 +38,8 @@ class CouponController extends Controller
      */
 
 
-    public function index() {
+    public function index(): \Illuminate\Http\JsonResponse
+    {
         try {
             $coupon = Coupon::get();
         }
@@ -68,7 +72,8 @@ class CouponController extends Controller
      */
 
 
-    public function store(CouponRequest $request) {
+    public function store(CouponRequest $request): \Illuminate\Http\JsonResponse
+    {
         $validated = CouponData::fromRequest($request);
         Coupon::create([
             'code'=>$validated->code,
@@ -114,7 +119,7 @@ class CouponController extends Controller
      */
 
 
-    public function changeCurrency(string $coupon)
+    public function changeCurrency(string $coupon): \Illuminate\Http\JsonResponse
     {
         session()->forget('currency');
         try {

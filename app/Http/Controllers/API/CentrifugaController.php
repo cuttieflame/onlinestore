@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API;
 
 use App\Models\Message;
 use App\Models\Room;
-use App\Models\User;
 use denis660\Centrifugo\Centrifugo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -13,9 +12,15 @@ use Illuminate\Http\Request;
 
 use App\Http\Controllers\Controller;
 
+/**
+ *
+ */
 class CentrifugaController extends Controller
 {
-    public function connect()
+    /**
+     * @return JsonResponse
+     */
+    public function connect(): JsonResponse
     {
         return new JsonResponse([
         'result' => [
@@ -26,7 +31,14 @@ class CentrifugaController extends Controller
 
     }
 //${this.$route.params.id.replace(/[^0-9]/g,"")}
-    public function example(Centrifugo $centrifugo,Request $request,$id)
+
+    /**
+     * @param Centrifugo $centrifugo
+     * @param Request $request
+     * @param $id
+     * @return JsonResponse
+     */
+    public function example(Centrifugo $centrifugo, Request $request,int $id): JsonResponse
     {
         $message = Message::create([
             'user_id' => Auth::user()->id,

@@ -16,8 +16,16 @@ use Illuminate\Http\Request;
 use App\Models\Cart;
 use Carbon\Carbon;
 
+
+/**
+ *
+ */
 class CartController extends Controller implements CartInterface
 {
+    /**
+     * @param $id
+     * @return false|\Illuminate\Http\JsonResponse
+     */
     public function userCarts($id = null) {
         $user_id = $id ? $id : (auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null);
 
@@ -46,7 +54,8 @@ class CartController extends Controller implements CartInterface
      *     )
      */
 
-    public function get() {
+    public function get(): \Illuminate\Http\JsonResponse
+    {
         try {
             $products = Cart::with(['product' => function ($q) {
                 $q->withAttributeOptions(['pr-price']);
@@ -146,7 +155,8 @@ class CartController extends Controller implements CartInterface
      *     )
      */
 
-    public function quantity(Request $request) {
+    public function quantity(Request $request): \Illuminate\Http\JsonResponse
+    {
         try {
             $cart = Cart::select(['id','quantity'])->where('id',$request->cart_id)->firstOrFail();
         }
@@ -185,7 +195,8 @@ class CartController extends Controller implements CartInterface
      */
 
 
-    public function delete(int $id) {
+    public function delete(int $id): \Illuminate\Http\JsonResponse
+    {
         try {
             $cart = Cart::where([
                 'session_id'=>session()->getId(),
@@ -220,7 +231,8 @@ class CartController extends Controller implements CartInterface
      *     )
      */
 
-    public function clear() {
+    public function clear(): \Illuminate\Http\JsonResponse
+    {
         try {
             $cart = Cart::select(['id','session_id'])
                 ->where(["session_id" => session()->getId()])->getOrFail();
@@ -251,7 +263,8 @@ class CartController extends Controller implements CartInterface
      */
 
 
-    public function total() {
+    public function total(): \Illuminate\Http\JsonResponse
+    {
         try {
             $cart = Cart::select(['id','price','quantity'])->getOrFail();
         }

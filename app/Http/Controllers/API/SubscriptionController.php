@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Http\Controllers\API;
 
@@ -17,14 +18,35 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
+/**
+ *
+ */
 class SubscriptionController extends Controller implements SubscriptionInterface
 {
-    private $dateService;
-    private $userService;
-    public function __construct(DateServiceInterface $dateService, UserServiceInterface $userService)
+    /**
+     * @var IStripeManager
+     */
+    private IStripeManager $IStripeManager;
+    /**
+     * @var DateServiceInterface
+     */
+    private DateServiceInterface $dateService;
+
+    /**
+     * @var UserServiceInterface
+     */
+    private UserServiceInterface $userService;
+
+    /**
+     * @param IStripeManager $IStripeManager
+     * @param DateServiceInterface $dateService
+     * @param UserServiceInterface $userService
+     */
+    public function __construct(IStripeManager $IStripeManager, DateServiceInterface $dateService, UserServiceInterface $userService)
     {
         $this->dateService = $dateService;
         $this->userService = $userService;
+        $this->IStripeManager = $IStripeManager;
     }
 
     /**
@@ -50,15 +72,15 @@ class SubscriptionController extends Controller implements SubscriptionInterface
      */
 
 
-    public function index() {
+    public function index(): \Illuminate\Http\JsonResponse
+    {
         try {
             $user = User::findOrFail(auth()->user()->id);
         }
         catch(ModelNotFoundException $exception) {
             return response()->json(['error'=>'User not found'],403);
         }
-        $abc = app(IStripeManager::class);
-        $service = $abc->make('stripe');
+        $service = $this->IStripeManager->make('stripe');
         $all_customers = $service->getAllCustomers();
         foreach($all_customers as $elem) {
             if($elem->metadata->user_id == $user->id) {
@@ -75,6 +97,12 @@ class SubscriptionController extends Controller implements SubscriptionInterface
         $sub = $service->createSubscription($customer->id);
         return response()->json(['check'=>$checkout,'sub'=>$sub],200);
     }
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse|void
+     * @throws \Stripe\Exception\ApiErrorException
+     */
     public function webhook(Request $request)
     {
         $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
@@ -174,7 +202,8 @@ class SubscriptionController extends Controller implements SubscriptionInterface
      *     )
      */
 
-    public function getAllProducts(Request $request) {
+    public function getAllProducts(Request $request): \Illuminate\Http\JsonResponse
+    {
         $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
         $products = $stripe->products->all();
         $subscription = $stripe->subscriptions->all();
@@ -207,7 +236,8 @@ class SubscriptionController extends Controller implements SubscriptionInterface
      * )
      */
 
-    public function addProduct() {
+    public function addProduct(): \Illuminate\Http\JsonResponse
+    {
         $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
         try {
             $user = User::findOrFail(auth()->user()->id);
@@ -371,8 +401,7 @@ class SubscriptionController extends Controller implements SubscriptionInterface
      */
 
     public function getUserSubscriptions() {
-        $abc = app(IStripeManager::class);
-        $service = $abc->make('stripe');
+        $service = $this->IStripeManager->make('stripe');
         try {
             $user = User::findOrFail(auth()->user()->id);
         }
