@@ -37,6 +37,7 @@
         "torann/geoip": "^3.0"
     },
     "require-dev": {
+        "barryvdh/laravel-ide-helper": "^2.12",
         "dragon-code/pretty-routes": "^3.2",
         "facade/ignition": "^2.5",
         "fakerphp/faker": "^1.9.1",

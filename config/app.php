@@ -87,6 +87,7 @@ return [
         Laravel\Scout\ScoutServiceProvider::class,
         App\Providers\CustomServiceProvider::class,
         L5Swagger\L5SwaggerServiceProvider::class,
+        Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider::class,
 
 
 

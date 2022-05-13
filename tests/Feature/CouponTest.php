@@ -35,6 +35,6 @@ class CouponTest extends TestCase
             'description'=>$this->faker->catchPhrase,
         ];
         $this->json('post', "api/v1/coupons/make",$payload)
-            ->assertStatus(200);
+            ->assertStatus(201);
     }
 }

@@ -12,16 +12,17 @@ use App\Models\Order;
 use App\Services\GetIpAdress;
 use App\Services\Order\IOrderManager;
 use App\Services\User\UserIndexService;
+use App\Services\User\UserServiceInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class OrderController extends Controller implements OrderInterface
 {
     private $ip;
-    private $user;
-    public function __construct(GetIpAdress $ip,UserIndexService $user)
+    private $userService;
+    public function __construct(GetIpAdress $ip,UserServiceInterface $userService)
     {
         $this->ip = $ip;
-        $this->user = $user;
+        $this->userService = $userService;
     }
 
     /**
@@ -66,7 +67,7 @@ class OrderController extends Controller implements OrderInterface
         $abc = app(IOrderManager::class);
         $service = $abc->make('order');
         try {
-            $user = $this->user->getUser($id);
+            $user = $this->userService->getUser($id);
             $carts = $service->getCarts($user->id);
             $coupon = Coupon::where('code',$validated->give_code)->firstOrFail();
         }

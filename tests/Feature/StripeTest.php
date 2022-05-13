@@ -29,14 +29,16 @@ class StripeTest extends TestCase
     }
     public function testStripeIsAddProductSuccessfully()
     {
+        $user = User::inRandomOrder()->limit(1)->first();
+        $this->actingAs($user);
         $this->json('post', "api/v1/stripe/add/product")
-            ->assertStatus(200);
+            ->assertStatus(201);
     }
     public function testStripeIsAddCustomerSuccessfully()
     {
         $user = User::inRandomOrder()->limit(1)->first();
         $this->json('post', "api/v1/stripe/add/customer/$user->id")
-            ->assertStatus(200);
+            ->assertStatus(201);
     }
     public function testStripeIsShowUserProductsSuccessfully()
     {

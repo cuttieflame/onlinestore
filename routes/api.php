@@ -42,7 +42,7 @@ use Illuminate\Support\Facades\Route;
 
     Route::prefix('cart')->group(function () {
         Route::get('/',[CartController::class,'get']);
-        Route::post('/cart/add/{product_id}',[CartController::class,'add']);
+        Route::post('/add/{product_id}',[CartController::class,'add']);
         Route::put('/quantity',[CartController::class,'quantity']);
         Route::post('/clear',[CartController::class,'clear']);
         Route::delete('/delete/{product_id}',[CartController::class,'delete']);
@@ -60,7 +60,7 @@ use Illuminate\Support\Facades\Route;
     Route::prefix('favorite')->group(function () {
         Route::get('/',[FavoriteController::class,'get']);
         Route::post('/add/{product_id}',[FavoriteController::class,'add']);
-        Route::post('/clear',[FavoriteController::class,'flush']);
+        Route::post('/clear',[FavoriteController::class,'clear']);
         Route::delete('/delete/{product_id}',[FavoriteController::class,'remove']);
         Route::get('/total',[FavoriteController::class,'total']);
     });
@@ -84,7 +84,7 @@ use Illuminate\Support\Facades\Route;
     });
     Route::get('/brands_categories',[ProductController::class,'brandsandcategories']);
 
-    Route::get('test',[TestController::class,'index']);
+    Route::get('/test',[TestController::class,'index']);
 
 
 

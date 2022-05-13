@@ -26,13 +26,22 @@ class CouponController extends Controller
      *      @OA\Response(
      *          response=401,
      *          description="Unauthenticated",
+     *       ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="FORBIDDEN",
      *       )
      *     )
      */
 
 
     public function index() {
-        $coupon = Coupon::get();
+        try {
+            $coupon = Coupon::get();
+        }
+        catch(ModelNotFoundException $exception) {
+            return response()->json(['status'=>'Error'],403);
+        }
         return response()->json(['data'=>$coupon],200);
     }
 

@@ -152,7 +152,7 @@ class ProductController extends Controller implements ProductInterface
                 $product = $builder->getOrFail();
             }
             catch(ModelNotFoundException $exception) {
-                return response()->json(['error'=>'Product not found'],403);
+                return response()->json(['error'=>'User not found'],403);
             }
             $checkout = null;
         }

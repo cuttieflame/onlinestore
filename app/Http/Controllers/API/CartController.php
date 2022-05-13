@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\API;
 
 use App\Contracts\CartInterface;
+use App\Exceptions\CartSessionNotFoundException;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CartCollection;
 use App\Http\Resources\CartResource;
@@ -51,6 +52,13 @@ class CartController extends Controller implements CartInterface
                 $q->withAttributeOptions(['pr-price']);
             }])
                 ->where(["session_id" => session()->getId()])
+                ->getOrFail();
+        }
+        catch(CartSessionNotFoundException $exception) {
+            $products = Cart::with(['product' => function ($q) {
+                $q->withAttributeOptions(['pr-price']);
+            }])
+                ->where(["user_id" => auth()->user()->id])
                 ->getOrFail();
         }
         catch(ModelNotFoundException $exception) {
@@ -179,12 +187,14 @@ class CartController extends Controller implements CartInterface
 
     public function delete(int $id) {
         try {
-            $cart = Cart::findOrFail($id);
+            $cart = Cart::where([
+                'session_id'=>session()->getId(),
+                'product_id'=>$id,
+                ])->firstOrFail()->delete();
         }
         catch(ModelNotFoundException $exception) {
             return response()->json(['status'=>'Корзины не существует'],403);
         }
-       $cart->destroy();
        return response()->json(['status'=>'Товар успешно удален из корзины'],200);
     }
 
@@ -212,7 +222,8 @@ class CartController extends Controller implements CartInterface
 
     public function clear() {
         try {
-            $cart = Cart::select(['id','session_id'])->where(["session_id" => session()->getId()])->getOrFail();
+            $cart = Cart::select(['id','session_id'])
+                ->where(["session_id" => session()->getId()])->getOrFail();
         }
         catch(ModelNotFoundException $exception) {
             return response()->json(['status'=>'Нет записей в корзине для удаления'],403);

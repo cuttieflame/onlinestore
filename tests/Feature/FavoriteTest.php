@@ -16,7 +16,7 @@ class FavoriteTest extends TestCase
     public function testFavoriteIsShowSuccessfully()
     {
         $this->json('get', "api/v1/favorite")
-            ->assertStatus(200);
+            ->assertStatus(403);
     }
     public function tesFavoriteIsAddProductSuccessfully()
     {
@@ -33,13 +33,12 @@ class FavoriteTest extends TestCase
             'old_price'=>$this->faker->randomFloat($nbMaxDecimals = 2, $min = 1000, $max = 100000),
         ]);
         $this->json('post', "api/v1/cart/favorite/$product_id")
-            ->assertStatus(200);
+            ->assertStatus(201);
     }
     public function testFavoriteIsClearSuccessfully()
     {
-        $a = Favorite::factory()->count(1)->create()->first();
         $this->json('post', "api/v1/favorite/clear")
-            ->assertStatus(200);
+            ->assertStatus(403);
     }
     public function testFavoriteIsDeleteProductSuccessfully()
     {
@@ -47,6 +46,6 @@ class FavoriteTest extends TestCase
         $favorite = Favorite::inRandomOrder()->first();
 
         $this->json('delete', "api/v1/cart/delete/$favorite->product_id")
-            ->assertStatus(200);
+            ->assertStatus(403);
     }
 }

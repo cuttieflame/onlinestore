@@ -9,7 +9,6 @@ use App\Models\ProductInfo;
 use App\Models\ProductPrice;
 use App\Models\ProductView;
 use App\Services\Filters\FilterBuilder;
-use App\Traits\Imageable;
 use Eav\Attribute;
 use Eav\AttributeOption;
 use Eav\Model;
@@ -41,9 +40,8 @@ class Products extends Model
 {
     use HasFactory;
     protected $table = "products";
-    public $incrementing = false;
     const ENTITY  = 'product';
-
+    public $fillable = ['id','entity_id','attribute_set_id','user_id'];
 
     public function attributes()
     {

@@ -10,6 +10,7 @@ use Faker\Factory as Faker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class ProductTest extends TestCase
@@ -51,7 +52,7 @@ class ProductTest extends TestCase
         $user->givePermissionsTo('create-products');
         $this->actingAs($user);
         $this->json('post', "api/v1/products/create",$payload)
-            ->assertStatus(200);
+            ->assertStatus(201);
 
     }
     //загрузка фото продукта
@@ -83,8 +84,10 @@ class ProductTest extends TestCase
             'email'=>$this->faker->email,
             'password'=>'12345'
         ]);
-        Products::factory()->count(5)->create([
-            'user_id'=>$user->id
+        DB::table('products')->insertGetId([
+            'entity_id' => 1,
+            'attribute_set_id' => 1,
+            'user_id'=>$user->id,
         ]);
 
         $this->json('get', "api/v1/product/$user->id?t=dsh")

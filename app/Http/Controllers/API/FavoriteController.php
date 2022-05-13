@@ -171,7 +171,8 @@ class FavoriteController extends Controller implements FavoriteInterface
 
     public function clear() {
         try {
-            $favorite = Favorite::select(['id','session_id'])->where(["session_id" => session()->getId()])->getOrFail();
+            $favorite = Favorite::select(['id','session_id'])
+                ->where(["session_id" => session()->getId()])->getOrFail();
         }
         catch(ModelNotFoundException $exception) {
             return response()->json(['status'=>'Нет записей в корзине для удаления'],403);
