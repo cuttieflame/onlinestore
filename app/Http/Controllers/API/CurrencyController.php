@@ -7,8 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Currency;
 use App\Services\Currency\CurrencyRates;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Session;
 
+/**
+ *
+ */
 class CurrencyController extends Controller implements CurrencyInterface
 {
 
@@ -44,7 +46,7 @@ class CurrencyController extends Controller implements CurrencyInterface
      */
 
 
-    public function changeCurrency(string $currencyCode)
+    public function changeCurrency(string $currencyCode): \Illuminate\Http\JsonResponse
     {
         try {
             $currency = Currency::byCode($currencyCode)->firstOrFail();
@@ -76,7 +78,8 @@ class CurrencyController extends Controller implements CurrencyInterface
      */
 
 
-    public function current() {
+    public function current(): \Illuminate\Http\JsonResponse
+    {
         CurrencyRates::getRates();
         return response()->json(['status'=>'changed'],200);
     }

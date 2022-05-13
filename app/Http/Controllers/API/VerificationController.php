@@ -8,6 +8,9 @@ use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Auth\Access\AuthorizationException;
 
+/**
+ *
+ */
 class VerificationController extends Controller
 {
 
@@ -29,7 +32,7 @@ class VerificationController extends Controller
      * )
      */
 
-    public function sendVerificationEmail(Request $request)
+    public function sendVerificationEmail(Request $request): \Illuminate\Http\JsonResponse
     {
         if ($request->user()->hasVerifiedEmail()) {
             return response()->json(['error'=>'Email already verified'],403);
@@ -76,7 +79,7 @@ class VerificationController extends Controller
      */
 
 
-    public function verify(EmailVerificationRequest $request)
+    public function verify(EmailVerificationRequest $request): \Illuminate\Http\JsonResponse
     {
         if ($request->user()->hasVerifiedEmail()) {
             return response()->json(['error'=>'Email already verified'],403);

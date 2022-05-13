@@ -15,11 +15,25 @@ use App\Services\User\UserIndexService;
 use App\Services\User\UserServiceInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
+/**
+ *
+ */
 class OrderController extends Controller implements OrderInterface
 {
+    /**
+     * @var GetIpAdress
+     */
     private $ip;
+    /**
+     * @var UserServiceInterface
+     */
     private $userService;
-    public function __construct(GetIpAdress $ip,UserServiceInterface $userService)
+
+    /**
+     * @param GetIpAdress $ip
+     * @param UserServiceInterface $userService
+     */
+    public function __construct(GetIpAdress $ip, UserServiceInterface $userService)
     {
         $this->ip = $ip;
         $this->userService = $userService;
@@ -61,7 +75,8 @@ class OrderController extends Controller implements OrderInterface
      */
 
 
-    public function makeOrder(OrderRequest $request,int $id) {
+    public function makeOrder(OrderRequest $request,int $id): \Illuminate\Http\JsonResponse
+    {
         $validated = OrderData::fromRequest($request);
         $address = $this->ip->getIp();
         $abc = app(IOrderManager::class);

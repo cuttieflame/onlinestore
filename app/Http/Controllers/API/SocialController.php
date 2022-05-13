@@ -8,12 +8,22 @@ use App\Models\User;
 use Laravel\Socialite\Facades\Socialite;
 use Redirect;
 
+/**
+ *
+ */
 class SocialController extends Controller implements SocialInterface
 {
-    public function index()
+    /**
+     * @return \Illuminate\Http\RedirectResponse|\Symfony\Component\HttpFoundation\RedirectResponse
+     */
+    public function index(): \Symfony\Component\HttpFoundation\RedirectResponse|\Illuminate\Http\RedirectResponse
     {
         return Socialite::driver('vkontakte')->redirect();
     }
+
+    /**
+     * @return void
+     */
     public function callback()
     {
         $user = Socialite::driver('vkontakte')->user();
@@ -26,5 +36,6 @@ class SocialController extends Controller implements SocialInterface
             return $u->fill(['name'=>$name]);
         }
         User::create($data);
+
     }
 }

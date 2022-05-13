@@ -28,15 +28,45 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 
+/**
+ *
+ */
 class ProductController extends Controller implements ProductInterface
 {
+    /**
+     * @var Products
+     */
     private $product;
+    /**
+     * @var Category
+     */
     private $category;
+    /**
+     * @var Currency
+     */
     private $currency;
+    /**
+     * @var ProductServiceInterface
+     */
     private $productService;
+    /**
+     * @var ArrayServiceInterface
+     */
     private $arrayService;
+    /**
+     * @var ImageServiceInterface
+     */
     private $imageService;
-    public function __construct(Products $product, Category $category, Currency $currency, ProductServiceInterface $productService,ArrayServiceInterface $arrayService,ImageServiceInterface $imageService)
+
+    /**
+     * @param Products $product
+     * @param Category $category
+     * @param Currency $currency
+     * @param ProductServiceInterface $productService
+     * @param ArrayServiceInterface $arrayService
+     * @param ImageServiceInterface $imageService
+     */
+    public function __construct(Products $product, Category $category, Currency $currency, ProductServiceInterface $productService, ArrayServiceInterface $arrayService, ImageServiceInterface $imageService)
     {
         $this->product = $product;
         $this->category = $category;
@@ -120,7 +150,8 @@ class ProductController extends Controller implements ProductInterface
 
 
 
-    public function userProduct(int $id,Request $request) {
+    public function userProduct(int $id,Request $request): \Illuminate\Http\JsonResponse
+    {
         if($request->t == 'main') {
             try {
                 $product = $this->product->where('id',$id)
@@ -185,7 +216,7 @@ class ProductController extends Controller implements ProductInterface
      * )
      */
 
-    public function store(ProductStoreRequest $request)
+    public function store(ProductStoreRequest $request): \Illuminate\Http\JsonResponse
     {
         $validated = ProductData::fromRequest($request);
         $options = $this->arrayService->makeOptionArray($validated);
@@ -285,7 +316,8 @@ class ProductController extends Controller implements ProductInterface
      * )
      */
 
-    public function uploadProductImage(UploadProductImageRequest $request,int $id) {
+    public function uploadProductImage(UploadProductImageRequest $request,int $id): \Illuminate\Http\JsonResponse
+    {
         $file = $this->imageService->InvertionImage($request->file('file'));
         $files = $this->imageService->InvertionImages($request->file('files'));
         Image::create([
@@ -324,7 +356,8 @@ class ProductController extends Controller implements ProductInterface
     *       )
      */
 
-    public function delete(Request $request) {
+    public function delete(Request $request): \Illuminate\Http\JsonResponse
+    {
         $this->productService->productArrayDelete(explode(",", $request->pr));
         return response()->json(['status'=>'Успешно удалено'],200);
     }
@@ -352,7 +385,8 @@ class ProductController extends Controller implements ProductInterface
      */
 
 
-    public function brandsandcategories() {
+    public function brandsandcategories(): \Illuminate\Http\JsonResponse
+    {
         $seconds = 14400;
         try {
             $categories = Cache::remember('categories', $seconds, function () {

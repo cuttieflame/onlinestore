@@ -11,8 +11,15 @@ use App\Models\User;
 use App\Products;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
+/**
+ *
+ */
 class FavoriteController extends Controller implements FavoriteInterface
 {
+    /**
+     * @param $id
+     * @return false|\Illuminate\Http\JsonResponse
+     */
     public function userFavorites($id = null) {
 
         $user_id = $id ? $id : (auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null);
@@ -139,7 +146,8 @@ class FavoriteController extends Controller implements FavoriteInterface
      */
 
 
-    public function delete(int $id) {
+    public function delete(int $id): \Illuminate\Http\JsonResponse
+    {
         try {
             $favorite = Favorite::findOrFail($id);
         }
@@ -169,7 +177,8 @@ class FavoriteController extends Controller implements FavoriteInterface
      */
 
 
-    public function clear() {
+    public function clear(): \Illuminate\Http\JsonResponse
+    {
         try {
             $favorite = Favorite::select(['id','session_id'])
                 ->where(["session_id" => session()->getId()])->getOrFail();
@@ -199,7 +208,8 @@ class FavoriteController extends Controller implements FavoriteInterface
      *     )
      */
 
-    public function total() {
+    public function total(): \Illuminate\Http\JsonResponse
+    {
         try {
             $favorite = Favorite::select(['id','price','quantity'])->getOrFail();
         }

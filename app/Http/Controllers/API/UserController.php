@@ -20,9 +20,19 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
 
+/**
+ *
+ */
 class UserController extends Controller implements UserInterface
 {
+    /**
+     * @var UserServiceInterface
+     */
     private $userService;
+
+    /**
+     * @param UserServiceInterface $userService
+     */
     public function __construct(UserServiceInterface $userService)
     {
         $this->userService = $userService;
@@ -46,7 +56,7 @@ class UserController extends Controller implements UserInterface
      *     )
      */
 
-    public function index(Request $request)
+    public function index(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
             $user = $this->userService->getUser(auth()->user()->id);
@@ -85,7 +95,7 @@ class UserController extends Controller implements UserInterface
      *     )
      */
 
-    public function update(UserAccountRequest $request,int $id)
+    public function update(UserAccountRequest $request,int $id): \Illuminate\Http\JsonResponse
     {
             $validated = UserData::fromRequest($request);
             try {
@@ -135,7 +145,8 @@ class UserController extends Controller implements UserInterface
      */
 
 
-    public function updateImage(UpdateImageRequest $request,int $id) {
+    public function updateImage(UpdateImageRequest $request,int $id): \Illuminate\Http\JsonResponse
+    {
         $file = $request->file('file');
         $a = ImageService::InvertionImage($file);
         try {
@@ -176,7 +187,7 @@ class UserController extends Controller implements UserInterface
      *     )
      */
 
-    public function destroy(int $id)
+    public function destroy(int $id): \Illuminate\Http\JsonResponse
     {
         try {
             $user = User::findOrFail($id);
@@ -220,7 +231,8 @@ class UserController extends Controller implements UserInterface
      */
 
 
-    public function resetPassword(ResetPasswordRequest $request) {
+    public function resetPassword(ResetPasswordRequest $request): \Illuminate\Http\JsonResponse
+    {
         try {
             $user = User::findOrFail(auth()->id());
         }
