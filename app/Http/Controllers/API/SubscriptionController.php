@@ -9,10 +9,10 @@ use App\Models\Payment;
 use App\Models\Subscription;
 use App\Models\SubscriptionItem;
 use App\Models\User;
-use App\Services\Date\DateService;
+use App\Services\Date\DateServiceInterface;
 use App\Services\PaymentMethodService;
 use App\Services\Stripe\IStripeManager;
-use App\Services\User\UserIndexService;
+use App\Services\User\UserServiceInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -20,17 +20,42 @@ use Illuminate\Support\Facades\Log;
 class SubscriptionController extends Controller implements SubscriptionInterface
 {
     private $dateService;
-    public function __construct(DateService $dateService)
+    private $userService;
+    public function __construct(DateServiceInterface $dateService, UserServiceInterface $userService)
     {
         $this->dateService = $dateService;
+        $this->userService = $userService;
     }
+
+    /**
+     * @OA\Get(
+     *      path="/stripe",
+     *      operationId="getUserStripeCheckoutSessionAndSubscription",
+     *      tags={"Stripe"},
+     *      summary="Get list of user stripe checkout session and subscription",
+     *      description="get list of user stripe checkout session and subscriptions",
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *       ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="User not found",
+     *      )
+     *     )
+     */
+
 
     public function index() {
         try {
             $user = User::findOrFail(auth()->user()->id);
         }
         catch(ModelNotFoundException $exception) {
-            return response()->json(['error'=>'Ошибка'],400);
+            return response()->json(['error'=>'User not found'],403);
         }
         $abc = app(IStripeManager::class);
         $service = $abc->make('stripe');
@@ -45,8 +70,8 @@ class SubscriptionController extends Controller implements SubscriptionInterface
                 $customer = $service->createCustomer($user->id);
             }
         }
-        $id = $customer->id ? $customer->id : $customer->metadata->user_id;
-        $checkout = $service->createTestCheckoutSession($id,$user->id);
+        $customer_id = $customer->id ? $customer->id : $customer->metadata->user_id;
+        $checkout = $service->createTestCheckoutSession($customer_id,$user->id);
         $sub = $service->createSubscription($customer->id);
         return response()->json(['check'=>$checkout,'sub'=>$sub],200);
     }
@@ -97,7 +122,7 @@ class SubscriptionController extends Controller implements SubscriptionInterface
             $ends_at = '';
             if ($abc['lines']['data'][0]['plan']['trial_period_days'] == '') {
                 $trial_ends_at = date('Y-m-d');
-                $ends_at = DateService::numberToDate($abc['lines']['data'][0]['period']['end']);
+                $ends_at = $this->dateService->numberToDate($abc['lines']['data'][0]['period']['end']);
             } else {
                 $trial_ends_at = $abc['lines']['data'][0]['plan']['trial_period_days'];
                 $ends_at = '';
@@ -111,7 +136,7 @@ class SubscriptionController extends Controller implements SubscriptionInterface
                 'quantity'=>$abc['lines']['data'][0]['quantity'],
                 'trial_ends_at'=>$trial_ends_at,
                 'ends_at'=>$ends_at,
-                'created_at'=>DateService::numberToDate($abc['lines']['data'][0]['period']['start']),
+                'created_at'=>$this->dateService->numberToDate($abc['lines']['data'][0]['period']['start']),
                 'updated_at'=>(string)$abc['created'],
                 'invoice_id'=>$abc['id'],
             ]);
@@ -134,29 +159,113 @@ class SubscriptionController extends Controller implements SubscriptionInterface
         }
         return response()->json(['webhook'],200);
     }
+
+    /**
+     * @OA\Get(
+     *      path="/stripe/allproducts",
+     *      operationId="getAllStripeProducts",
+     *      tags={"Stripe"},
+     *      summary="Get list of stripe products",
+     *      description="Returns list of stripe products",
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       )
+     *     )
+     */
+
     public function getAllProducts(Request $request) {
         $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
         $products = $stripe->products->all();
         $subscription = $stripe->subscriptions->all();
         return response()->json(['products'=>$products,'subscription'=>$subscription],200);
     }
+
+    /**
+     * @OA\Post(
+     *      path="/stripe/add/product",
+     *      operationId="StripeAddProduct",
+     *      tags={"Stripe"},
+     *      summary="Create new stripe product",
+     *      description="Create new stripe product",
+     *      @OA\Response(
+     *          response=201,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden",
+     *      )
+     * )
+     */
+
     public function addProduct() {
         $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
+        try {
+            $user = User::findOrFail(auth()->user()->id);
+        }
+        catch(ModelNotFoundException $exception) {
+            return response()->json(['status'=>'Нет такого пользователя'],403);
+        }
         $stripe->products->create([
             'name' => 'name',
             'metadata' => [
                 'price'=>123,
-                'user_id'=>auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null,
+                'user_id'=>$user->id,
             ],
         ]);
-        return response()->json(['status'=>'Товар успешно создан'],200);
+        return response()->json(['status'=>'Товар успешно создан'],201);
     }
+
+    /**
+     * @OA\Post(
+     *      path="/stripe/add/customer/{id}",
+     *      operationId="StripeAddCustomer",
+     *      tags={"Stripe"},
+     *      summary="Create new stripe customer",
+     *      description="Create new stripe customer",
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="User id",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=201,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden",
+     *      )
+     * )
+     */
+
     public function addCustomer(int $id,Request $request) {
         try {
-            $user = UserIndexService::getUser($id);
+            $user = $this->userService->getUser($id);
         }
         catch(ModelNotFoundException $exception) {
-            return response()->json(['error'=>'Ошибка'],400);
+            return response()->json(['error'=>'Ошибка'],403);
         }
         $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
         $search = 'metadata[\'user_id\']:'."'$user->id'";
@@ -178,14 +287,43 @@ class SubscriptionController extends Controller implements SubscriptionInterface
         else {
             return response()->json(['status'=>'Error'],400);
         }
-        return response()->json(['status'=>'Пользователь успешно добавлен'],200);
+        return response()->json(['status'=>'Пользователь успешно добавлен'],201);
     }
+
+    /**
+     * @OA\Get(
+     *      path="/stripe/products/{id}",
+     *      operationId="getUserStripeProducts",
+     *      tags={"Stripe"},
+     *      summary="Get list of user stripe products",
+     *      description="Returns list of user stripe products",
+     *      @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="User id",
+     *         required=true,
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *       ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="User not found",
+     *      )
+     *     )
+     */
+
     public function getProducts(int $id) {
         try {
-            $user = UserIndexService::getUser($id);
+            $user = $this->userService->getUser($id);
         }
         catch(ModelNotFoundException $exception) {
-            return response()->json(['error'=>'Ошибка'],400);
+            return response()->json(['error'=>'Ошибка'],403);
         }
         $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
         $search = 'metadata[\'user_id\']:'."'$user->id'";
@@ -209,6 +347,29 @@ class SubscriptionController extends Controller implements SubscriptionInterface
             return response()->json(['subs'=>$subs],200);
         }
     }
+
+    /**
+     * @OA\Get(
+     *      path="/user/subscriptions",
+     *      operationId="getUserStripeSubscription",
+     *      tags={"Stripe"},
+     *      summary="Get list of user stripe subscriptions",
+     *      description="Returns list of user stripe subscripions",
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *       ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="User not found",
+     *      )
+     *     )
+     */
+
     public function getUserSubscriptions() {
         $abc = app(IStripeManager::class);
         $service = $abc->make('stripe');
@@ -216,7 +377,7 @@ class SubscriptionController extends Controller implements SubscriptionInterface
             $user = User::findOrFail(auth()->user()->id);
         }
         catch(ModelNotFoundException $exception) {
-            return response()->json(['error'=>'Ошибка'],400);
+            return response()->json(['error'=>'Ошибка'],403);
         }
         $search = 'metadata[\'user_id\']:'."'$user->id'";
         $customer = $service->customerSearch($search);
@@ -230,23 +391,8 @@ class SubscriptionController extends Controller implements SubscriptionInterface
             foreach ($cards as $card) {
                 $arr_cards[] = PaymentMethodService::makeCardParametr($card);
             }
-            $customer_items = Subscription::where('user_id', $user->id)->with('subscriptionItems')->get();
-            $products = [];
-            $invoices = [];
-            $i = 0;
-            foreach ($customer_items as $elem) {
-                $products[] = $service->productRetrieve($elem->subscriptionItems->stripe_id);
-                $invoices[] = $service->invoceRetrieve($elem->invoice_id);
-                $elem->price = $products[$i]->metadata->price;
-                $elem->currency = $invoices[$i]->currency;
-                $elem->start = $this->dateService->numberToDate($invoices[$i]['lines']['data'][0]['period']['start']);
-                $elem->end = $this->dateService->numberToDate($invoices[$i]['lines']['data'][0]['period']['end']);
-                $elem->transaction_id = $elem->subscriptionItems->stripe_id;
-                $elem->transaction_date = $invoices[$i]->created;
-                $elem->status = $invoices[$i]->paid;
-                $elem->amount = $products[$i]->metadata->price;
-                $i = $i + 1;
-            }
+            $customer_items = $this->userService->makeCustomerItems($user->id,$service);
+
             return response()->json([new CustomerBillingCollection($customer_items), $arr_cards], 200);
         }
     }

@@ -5,7 +5,7 @@ namespace App\Services\Date;
 
 use DateTimeImmutable;
 
-final class DateService implements DateInterface
+final class DateService implements DateServiceInterface
 {
     public static function numberToDate(string $data) {
         $now = new DateTimeImmutable();

@@ -39,10 +39,6 @@ class CartController extends Controller implements CartInterface
      *          description="Successful operation",
      *       ),
      *      @OA\Response(
-     *          response=401,
-     *          description="Unauthenticated",
-     *       ),
-     *      @OA\Response(
      *          response=403,
      *          description="Cart not found",
      *      )
@@ -64,6 +60,39 @@ class CartController extends Controller implements CartInterface
 
    return response()->json(['products'=>new CartCollection($products),'times'=>$times],200);
     }
+
+    /**
+     * @OA\Post(
+     *      path="/cart/add/{product_id}",
+     *      operationId="storeNewCartProduct",
+     *      tags={"Carts"},
+     *      summary="Store new produt",
+     *      description="Create new product",
+     *      @OA\Parameter(
+     *         name="product_id",
+     *         in="path",
+     *         description="Product id",
+     *         required=true,
+     *         @OA\Schema(
+     *              type="integer"
+     *         )
+     *      ),
+     *      @OA\Response(
+     *          response=201,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Product not found"
+     *      )
+     * )
+     */
+
+
     public function add(int $product_id) {
         try {
             $product = Products::where('id', $product_id)
@@ -71,7 +100,7 @@ class CartController extends Controller implements CartInterface
                 ->firstOrFail();
         }
         catch(ModelNotFoundException $exception) {
-            return response()->json(['status'=>'Нет такого продукта'],400);
+            return response()->json(['status'=>'Нет такого продукта'],403);
         }
         if($cart = Cart::where([
             "session_id" => session()->getId(),
@@ -88,22 +117,139 @@ class CartController extends Controller implements CartInterface
                 "price" => $product->productprice->price ? $product->productprice->price : 0,
             ]);
         }
-        return response()->json(['status'=>'Успешно добавлена'],200);
+        return response()->json(['status'=>'Успешно добавлена'],201);
     }
+
+    /**
+     * @OA\Put (
+     *      path="/cart/quantity",
+     *      operationId="CartAddProduct",
+     *      tags={"Carts"},
+     *      summary="cart add product",
+     *      description="Cart add product",
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Cart not found",
+     *      )
+     *     )
+     */
+
     public function quantity(Request $request) {
-        $cart = Cart::select(['id','quantity'])->where('id',$request->cart_id)->first();
+        try {
+            $cart = Cart::select(['id','quantity'])->where('id',$request->cart_id)->firstOrFail();
+        }
+        catch(ModelNotFoundException $exception) {
+            return response()->json(['status'=>'Корзина не найдена'],403);
+        }
         CartQuantity::dispatch($cart,$request->quantity,$request->value);
+        return response()->json(['status'=>'Изменено количество'],200);
     }
-    public function remove(int $id) {
-        return Cart::destroy($id);
+
+    /**
+     * @OA\Delete  (
+     *      path="/cart/delete/{product_id}",
+     *      operationId="CartDeleteProduct",
+     *      tags={"Carts"},
+     *      summary="cart delete product",
+     *      description="Cart delete product",
+     *      @OA\Parameter(
+     *         name="product_id",
+     *         in="path",
+     *         description="Product id for delete",
+     *         required=true,
+     *         @OA\Schema(
+     *              type="integer"
+     *         )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Cart not found",
+     *      )
+     *     )
+     */
+
+
+    public function delete(int $id) {
+        try {
+            $cart = Cart::findOrFail($id);
+        }
+        catch(ModelNotFoundException $exception) {
+            return response()->json(['status'=>'Корзины не существует'],403);
+        }
+       $cart->destroy();
+       return response()->json(['status'=>'Товар успешно удален из корзины'],200);
     }
-    public function flush() {
-        Cart::where(["session_id" => session()->getId()])->delete();
-        return response()->json(['error'=>'Корзина очищена'],200);
+
+    /**
+     * @OA\Post   (
+     *      path="/cart/clear",
+     *      operationId="CartClear",
+     *      tags={"Carts"},
+     *      summary="cart clear",
+     *      description="Cart clear",
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *       ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Cart error",
+     *      )
+     *     )
+     */
+
+    public function clear() {
+        try {
+            $cart = Cart::select(['id','session_id'])->where(["session_id" => session()->getId()])->getOrFail();
+        }
+        catch(ModelNotFoundException $exception) {
+            return response()->json(['status'=>'Нет записей в корзине для удаления'],403);
+        }
+        $cart->delete();
+        return response()->json(['status'=>'Корзина очищена'],200);
     }
+
+    /**
+     * @OA\Post   (
+     *      path="/cart/total",
+     *      operationId="CartTotal",
+     *      tags={"Carts"},
+     *      summary="cart total",
+     *      description="Cart total",
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Cart error",
+     *      )
+     *     )
+     */
+
+
     public function total() {
-        return Cart::get()->map(function ($item) {
+        try {
+            $cart = Cart::select(['id','price','quantity'])->getOrFail();
+        }
+        catch(ModelNotFoundException $exception) {
+            return response()->json(['status'=>'Cart error'],403);
+        }
+        $sum = $cart->map(function ($item) {
             return $item->price * $item->quantity;
         })->sum();
+        return response()->json(['total'=>$sum],200);
     }
 }

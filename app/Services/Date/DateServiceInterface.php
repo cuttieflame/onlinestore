@@ -2,7 +2,7 @@
 
 namespace App\Services\Date;
 
-interface DateInterface
+interface DateServiceInterface
 {
     public static function numberToDate(string $data);
 }

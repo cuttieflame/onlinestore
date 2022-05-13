@@ -23,6 +23,43 @@ class OrderController extends Controller implements OrderInterface
         $this->ip = $ip;
         $this->user = $user;
     }
+
+    /**
+     * @OA\Post(
+     *      path="/order/make/{id}",
+     *      operationId="MakeNewOrder",
+     *      tags={"Orders"},
+     *      summary="create new order",
+     *      description="Create new order",
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="User id",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+
+
     public function makeOrder(OrderRequest $request,int $id) {
         $validated = OrderData::fromRequest($request);
         $address = $this->ip->getIp();
@@ -30,27 +67,17 @@ class OrderController extends Controller implements OrderInterface
         $service = $abc->make('order');
         try {
             $user = $this->user->getUser($id);
-        }
-        catch(ModelNotFoundException $exception) {
-            return response()->json(['error'=>'Model not found']);
-        }
-        try {
             $carts = $service->getCarts($user->id);
-        }
-        catch(ModelNotFoundException $exception) {
-            return response()->json(['error'=>'Cart not found']);
-        }
-        try {
             $coupon = Coupon::where('code',$validated->give_code)->firstOrFail();
         }
         catch(ModelNotFoundException $exception) {
-            return response()->json(['error'=>'Coupon not valid']);
+            return response()->json(['error'=>'Error'],403);
         }
         $order = $service->createOrder($user,$address,$validated,$coupon);
         $amount = $service->createOrderItem($carts,$order->id);
         Order::where('order_id',$order->id)->update(['amount'=>$amount]);
         Cart::where('user_id',3)->delete();
-        return response()->json(['status'=>'uspeshno']);
+        return response()->json(['status'=>'order make'],200);
     }
 
 }

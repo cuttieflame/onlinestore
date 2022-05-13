@@ -11,7 +11,7 @@ use App\Products;
 use App\Providers\RepositoryServiceProvider;
 use App\Services\Arr\ArrayService;
 use App\Services\Arr\ArrayServiceInterface;
-use App\Services\Date\DateInterface;
+use App\Services\Date\DateServiceInterface;
 use App\Services\Date\DateService;
 use App\Services\Images\ImageService;
 use App\Services\Images\ImageServiceInterface;
@@ -19,6 +19,8 @@ use App\Services\Product\ProductService;
 use App\Services\Product\ProductServiceInterface;
 use App\Services\Test\DemoOne;
 use App\Services\Test\DemoOneInterface;
+use App\Services\User\UserService;
+use App\Services\User\UserServiceInterface;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
 
@@ -43,7 +45,8 @@ class AppServiceProvider extends ServiceProvider
         });
         $this->app->bind(ArrayServiceInterface::class, ArrayService::class);
         $this->app->bind(ImageServiceInterface::class, ImageService::class);
-        $this->app->bind(DateInterface::class, DateService::class);
+        $this->app->bind(DateServiceInterface::class, DateService::class);
+        $this->app->bind(UserServiceInterface::class, UserService::class);
         $this->app->bind(ProductServiceInterface::class, ProductService::class);
         $this->app->register(\L5Swagger\L5SwaggerServiceProvider::class);
 //        $this->app->bind(ArrayServiceInterface::class,function($app) {

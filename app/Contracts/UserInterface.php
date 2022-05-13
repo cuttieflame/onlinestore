@@ -11,7 +11,7 @@ interface UserInterface
 {
     public function index(Request $request);
     public function update(UserAccountRequest $request,int $id);
-    public function updateImage(UpdateImageRequest $request,$id);
+    public function updateImage(UpdateImageRequest $request,int $id);
     public function destroy(int $id);
     public function resetPassword(ResetPasswordRequest $request);
 }

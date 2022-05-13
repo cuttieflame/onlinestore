@@ -10,33 +10,82 @@ use Illuminate\Auth\Access\AuthorizationException;
 
 class VerificationController extends Controller
 {
+
+    /**
+     * @OA\Post(
+     *      path="/email/resend",
+     *      operationId="email resend",
+     *      tags={"User"},
+     *      summary="User email resend",
+     *      description="User email resend",
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *     @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+
     public function sendVerificationEmail(Request $request)
     {
         if ($request->user()->hasVerifiedEmail()) {
-            return [
-                'message' => 'Already Verified'
-            ];
+            return response()->json(['error'=>'Email already verified'],403);
+
         }
-
         $request->user()->sendEmailVerificationNotification();
-
-        return ['status' => 'verification-link-sent'];
+        return response()->json(['status'=>'письмо отправлено'],200);
     }
+
+    /**
+     * @OA\Post(
+     *      path="/email/verify/{id}/{hash}}",
+     *      operationId="EmailVerify",
+     *      tags={"User"},
+     *      summary="Email verify",
+     *      description="Email verify",
+     *     @OA\Parameter(
+     *          name="id",
+     *          description="Id",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *     @OA\Parameter(
+     *          name="hash",
+     *          description="Hash",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+
+
     public function verify(EmailVerificationRequest $request)
     {
         if ($request->user()->hasVerifiedEmail()) {
-            return [
-                'message' => 'Email already verified'
-            ];
+            return response()->json(['error'=>'Email already verified'],403);
         }
 
         if ($request->user()->markEmailAsVerified()) {
             event(new Verified($request->user()));
         }
-
-        return [
-            'message'=>'Email has been verified'
-        ];
+        return response()->json(['message'=>'Email has been verified'],200);
     }
 
 }

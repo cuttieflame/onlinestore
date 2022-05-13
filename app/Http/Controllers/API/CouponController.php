@@ -39,7 +39,7 @@ class CouponController extends Controller
     /**
      * @OA\Post(
      *      path="/coupons/make",
-     *      operationId="storeProduct",
+     *      operationId="couponMade",
      *      tags={"Coupons"},
      *      summary="Store new coupon",
      *      description="Create new coupon",

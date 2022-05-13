@@ -19,6 +19,142 @@
         }
     ],
     "paths": {
+        "/cart": {
+            "get": {
+                "tags": [
+                    "Carts"
+                ],
+                "summary": "Get list of user cart",
+                "description": "Returns list of user cart",
+                "operationId": "getUserCartList",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "403": {
+                        "description": "Cart not found"
+                    }
+                }
+            }
+        },
+        "/cart/add/{product_id}": {
+            "post": {
+                "tags": [
+                    "Carts"
+                ],
+                "summary": "Store new produt",
+                "description": "Create new product",
+                "operationId": "storeNewCartProduct",
+                "parameters": [
+                    {
+                        "name": "product_id",
+                        "in": "path",
+                        "description": "Product id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Product not found"
+                    }
+                }
+            }
+        },
+        "/cart/quantity": {
+            "put": {
+                "tags": [
+                    "Carts"
+                ],
+                "summary": "cart add product",
+                "description": "Cart add product",
+                "operationId": "CartAddProduct",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "403": {
+                        "description": "Cart not found"
+                    }
+                }
+            }
+        },
+        "/cart/delete/{product_id}": {
+            "delete": {
+                "tags": [
+                    "Carts"
+                ],
+                "summary": "cart delete product",
+                "description": "Cart delete product",
+                "operationId": "CartDeleteProduct",
+                "parameters": [
+                    {
+                        "name": "product_id",
+                        "in": "path",
+                        "description": "Product id for delete",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "403": {
+                        "description": "Cart not found"
+                    }
+                }
+            }
+        },
+        "/cart/clear": {
+            "post": {
+                "tags": [
+                    "Carts"
+                ],
+                "summary": "cart clear",
+                "description": "Cart clear",
+                "operationId": "CartClear",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Cart error"
+                    }
+                }
+            }
+        },
+        "/cart/total": {
+            "post": {
+                "tags": [
+                    "Carts"
+                ],
+                "summary": "cart total",
+                "description": "Cart total",
+                "operationId": "CartTotal",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "403": {
+                        "description": "Cart error"
+                    }
+                }
+            }
+        },
         "/category/{id}": {
             "get": {
                 "tags": [
@@ -101,7 +237,7 @@
                 ],
                 "summary": "Store new coupon",
                 "description": "Create new coupon",
-                "operationId": "storeProduct",
+                "operationId": "couponMade",
                 "responses": {
                     "201": {
                         "description": "Successful operation"
@@ -193,6 +329,156 @@
                     },
                     "401": {
                         "description": "Unauthenticated"
+                    }
+                }
+            }
+        },
+        "/favorite": {
+            "get": {
+                "tags": [
+                    "Favorites"
+                ],
+                "summary": "Get list of user favorites",
+                "description": "Returns list of user favorites",
+                "operationId": "getUserFavoritesList",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "403": {
+                        "description": "Favorite not found"
+                    }
+                }
+            }
+        },
+        "/favorite/add/{product_id}": {
+            "post": {
+                "tags": [
+                    "Favorites"
+                ],
+                "summary": "Store new cart product",
+                "description": "Store new cart product",
+                "operationId": "storeNewFavoriteProduct",
+                "parameters": [
+                    {
+                        "name": "product_id",
+                        "in": "path",
+                        "description": "Product id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Product not found"
+                    }
+                }
+            }
+        },
+        "/favorite/delete/{product_id}": {
+            "delete": {
+                "tags": [
+                    "Favorites"
+                ],
+                "summary": "cart delete product",
+                "description": "Cart delete product",
+                "operationId": "FavoriteDeleteProduct",
+                "parameters": [
+                    {
+                        "name": "product_id",
+                        "in": "path",
+                        "description": "Product id for delete",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "403": {
+                        "description": "Cart not found"
+                    }
+                }
+            }
+        },
+        "/favorite/clear": {
+            "post": {
+                "tags": [
+                    "Favorites"
+                ],
+                "summary": "favorite clear",
+                "description": "Favorite clear",
+                "operationId": "FavoriteClear",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "403": {
+                        "description": "Cart error"
+                    }
+                }
+            }
+        },
+        "/favorite/total": {
+            "post": {
+                "tags": [
+                    "Favorites"
+                ],
+                "summary": "favorite total",
+                "description": "Favorite total",
+                "operationId": "FavoriteTotal",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "403": {
+                        "description": "Cart error"
+                    }
+                }
+            }
+        },
+        "/order/make/{id}": {
+            "post": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "create new order",
+                "description": "Create new order",
+                "operationId": "MakeNewOrder",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "User id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
                     }
                 }
             }
@@ -352,6 +638,344 @@
                     },
                     "403": {
                         "description": "Нет таких записей"
+                    }
+                }
+            }
+        },
+        "/stripe": {
+            "get": {
+                "tags": [
+                    "Stripe"
+                ],
+                "summary": "Get list of user stripe checkout session and subscription",
+                "description": "get list of user stripe checkout session and subscriptions",
+                "operationId": "getUserStripeCheckoutSessionAndSubscription",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "User not found"
+                    }
+                }
+            }
+        },
+        "/stripe/allproducts": {
+            "get": {
+                "tags": [
+                    "Stripe"
+                ],
+                "summary": "Get list of stripe products",
+                "description": "Returns list of stripe products",
+                "operationId": "getAllStripeProducts",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                }
+            }
+        },
+        "/stripe/add/product": {
+            "post": {
+                "tags": [
+                    "Stripe"
+                ],
+                "summary": "Create new stripe product",
+                "description": "Create new stripe product",
+                "operationId": "StripeAddProduct",
+                "responses": {
+                    "201": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                }
+            }
+        },
+        "/stripe/add/customer/{id}": {
+            "post": {
+                "tags": [
+                    "Stripe"
+                ],
+                "summary": "Create new stripe customer",
+                "description": "Create new stripe customer",
+                "operationId": "StripeAddCustomer",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "User id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                }
+            }
+        },
+        "/stripe/products/{id}": {
+            "get": {
+                "tags": [
+                    "Stripe"
+                ],
+                "summary": "Get list of user stripe products",
+                "description": "Returns list of user stripe products",
+                "operationId": "getUserStripeProducts",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "User id",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "User not found"
+                    }
+                }
+            }
+        },
+        "/user/subscriptions": {
+            "get": {
+                "tags": [
+                    "Stripe"
+                ],
+                "summary": "Get list of user stripe subscriptions",
+                "description": "Returns list of user stripe subscripions",
+                "operationId": "getUserStripeSubscription",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "User not found"
+                    }
+                }
+            }
+        },
+        "/user": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Get list of user",
+                "description": "Returns list of user",
+                "operationId": "getUser",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "403": {
+                        "description": "User not found"
+                    }
+                }
+            }
+        },
+        "/user/update/{id}": {
+            "put": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Update user",
+                "description": "Update user",
+                "operationId": "updateUser",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "User id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "403": {
+                        "description": "User not found"
+                    }
+                }
+            }
+        },
+        "/user/updateImage/{id}": {
+            "post": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Update user image",
+                "description": "Update user image",
+                "operationId": "updateUserImage",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "User id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "403": {
+                        "description": "User not found"
+                    }
+                }
+            }
+        },
+        "/user/destroy/{id}": {
+            "delete": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Delete user",
+                "description": "Delete user",
+                "operationId": "deleteUser",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "User id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "403": {
+                        "description": "User not found"
+                    }
+                }
+            }
+        },
+        "/password/password-reset": {
+            "post": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "User password reset",
+                "description": "User password reset",
+                "operationId": "UserPasswordReset",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "User id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Error"
+                    },
+                    "403": {
+                        "description": "User not found"
+                    }
+                }
+            }
+        },
+        "/email/resend": {
+            "post": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "User email resend",
+                "description": "User email resend",
+                "operationId": "email resend",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                }
+            }
+        },
+        "/email/verify/{id}/{hash}}": {
+            "post": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Email verify",
+                "description": "Email verify",
+                "operationId": "EmailVerify",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "hash",
+                        "in": "path",
+                        "description": "Hash",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "403": {
+                        "description": "Forbidden"
                     }
                 }
             }

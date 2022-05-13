@@ -7,14 +7,11 @@ use App\Http\Controllers\API\CouponController;
 use App\Http\Controllers\API\CurrencyController;
 use App\Http\Controllers\API\FavoriteController;
 use App\Http\Controllers\API\OrderController;
-use App\Http\Controllers\API\ParserController;
 use App\Http\Controllers\API\ProductController;
-use App\Http\Controllers\API\SearchController;
 use App\Http\Controllers\API\SubscriptionController;
 use App\Http\Controllers\API\TestController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\VerificationController;
-use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -31,9 +28,10 @@ use Illuminate\Support\Facades\Route;
 
     Route::prefix('user')->group(function () {
         Route::get('/',[UserController::class,'index']);
-        Route::delete('/destroy/{id}',[UserController::class,'destroy']);
         Route::put('/update/{id}',[UserController::class,'update']);
         Route::post('/updateImage/{id}',[UserController::class,'updateImage']);
+        Route::delete('/destroy/{id}',[UserController::class,'destroy']);
+        Route::get('/subscriptions',[SubscriptionController::class,'getUserSubscriptions']);
     });
 
     Route::get('/products', [ProductController::class, 'index']);
@@ -46,8 +44,9 @@ use Illuminate\Support\Facades\Route;
         Route::get('/',[CartController::class,'get']);
         Route::post('/cart/add/{product_id}',[CartController::class,'add']);
         Route::put('/quantity',[CartController::class,'quantity']);
-        Route::post('/clear',[CartController::class,'flush']);
-        Route::delete('/delete/{product_id}',[CartController::class,'remove']);
+        Route::post('/clear',[CartController::class,'clear']);
+        Route::delete('/delete/{product_id}',[CartController::class,'delete']);
+        Route::get('/total',[CartController::class,'total']);
     });
 
     Route::prefix('coupons')->group(function () {
@@ -63,6 +62,7 @@ use Illuminate\Support\Facades\Route;
         Route::post('/add/{product_id}',[FavoriteController::class,'add']);
         Route::post('/clear',[FavoriteController::class,'flush']);
         Route::delete('/delete/{product_id}',[FavoriteController::class,'remove']);
+        Route::get('/total',[FavoriteController::class,'total']);
     });
 
     Route::post('password/password-reset',[UserController::class,'resetPassword']);
@@ -83,7 +83,6 @@ use Illuminate\Support\Facades\Route;
         Route::get('/products/{id}',[SubscriptionController::class,'getProducts']);
     });
     Route::get('/brands_categories',[ProductController::class,'brandsandcategories']);
-    Route::get('/user/subscriptions',[SubscriptionController::class,'getUserSubscriptions']);
 
     Route::get('test',[TestController::class,'index']);
 
