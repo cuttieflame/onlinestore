@@ -5,16 +5,35 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @method get()
+ */
 class Currency extends Model
 {
     use HasFactory;
+
+    /**
+     * @var string[]
+     */
     protected $fillable = [
       'rate'
     ];
-    public function scopeByCode($query,$code) {
+
+    /**
+     * @param $query
+     * @param string $code
+     * @return mixed
+     */
+    public function scopeByCode($query,string $code): mixed
+    {
         return $query->where('code',$code);
     }
-    public function isMain() {
+
+    /**
+     * @return bool
+     */
+    public function isMain(): bool
+    {
         return $this->is_main === 1;
     }
 }

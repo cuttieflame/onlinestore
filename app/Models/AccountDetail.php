@@ -5,9 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ *
+ */
 class AccountDetail extends Model
 {
     use HasFactory;
+
+    /**
+     * @var string[]
+     */
     protected $fillable = [
         'id',
         'first_name',
@@ -17,6 +24,9 @@ class AccountDetail extends Model
         'phone',
         'birthday',
     ];
+    /**
+     * @var string
+     */
     protected $table = 'account_details';
 
 }

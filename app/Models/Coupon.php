@@ -4,31 +4,55 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ *
+ */
 class Coupon extends Model
 {
     use HasFactory;
 
+    /**
+     * @var string[]
+     */
     protected $fillable = ['code', 'value', 'type', 'currency_id', 'only_once', 'expired_at', 'description'];
 
+    /**
+     * @var string[]
+     */
     protected $dates = ['expired_at'];
+    private mixed $type;
 
-    public function orders()
+    /**
+     * @return HasMany
+     */
+    public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
     }
 
-    public function currency()
+    /**
+     * @return BelongsTo
+     */
+    public function currency(): BelongsTo
     {
         return $this->belongsTo(Currency::class);
     }
 
-    public function isAbsolute()
+    /**
+     * @return bool
+     */
+    public function isAbsolute(): bool
     {
         return $this->type === 1;
     }
 
-    public function isOnlyOnce()
+    /**
+     * @return bool
+     */
+    public function isOnlyOnce(): bool
     {
         return $this->only_once === 1;
     }

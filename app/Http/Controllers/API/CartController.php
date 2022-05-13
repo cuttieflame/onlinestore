@@ -7,11 +7,10 @@ use App\Contracts\CartInterface;
 use App\Exceptions\CartSessionNotFoundException;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CartCollection;
-use App\Http\Resources\CartResource;
-use App\Http\Resources\ProductResource;
 use App\Jobs\CartQuantity;
 use App\Products;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\Cart;
 use Carbon\Carbon;
@@ -24,10 +23,11 @@ class CartController extends Controller implements CartInterface
 {
     /**
      * @param $id
-     * @return false|\Illuminate\Http\JsonResponse
+     * @return false|JsonResponse
      */
-    public function userCarts($id = null) {
-        $user_id = $id ? $id : (auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null);
+    public function userCarts($id = null): bool|JsonResponse
+    {
+        $user_id = $id ?: (auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null);
 
         if(is_null($user_id)) {
             return false;
@@ -54,7 +54,7 @@ class CartController extends Controller implements CartInterface
      *     )
      */
 
-    public function get(): \Illuminate\Http\JsonResponse
+    public function get(): JsonResponse
     {
         try {
             $products = Cart::with(['product' => function ($q) {
@@ -63,14 +63,14 @@ class CartController extends Controller implements CartInterface
                 ->where(["session_id" => session()->getId()])
                 ->getOrFail();
         }
-        catch(CartSessionNotFoundException $exception) {
+        catch(CartSessionNotFoundException) {
             $products = Cart::with(['product' => function ($q) {
                 $q->withAttributeOptions(['pr-price']);
             }])
                 ->where(["user_id" => auth()->user()->id])
                 ->getOrFail();
         }
-        catch(ModelNotFoundException $exception) {
+        catch(ModelNotFoundException) {
             return response()->json(['status'=>'Ошибка'],403);
         }
         $times = ["now"=>Carbon::now()->format('d.m.Y'),"not_now"=>Carbon::now()->addDays(2)->format('d.m.Y')];
@@ -110,13 +110,14 @@ class CartController extends Controller implements CartInterface
      */
 
 
-    public function add(int $product_id) {
+    public function add(int $product_id): JsonResponse
+    {
         try {
             $product = Products::where('id', $product_id)
                 ->with(['productprice:id,price'])
                 ->firstOrFail();
         }
-        catch(ModelNotFoundException $exception) {
+        catch(ModelNotFoundException) {
             return response()->json(['status'=>'Нет такого продукта'],403);
         }
         if($cart = Cart::where([
@@ -127,11 +128,11 @@ class CartController extends Controller implements CartInterface
             $cart->save();
         }
         else {
-            $cart = Cart::create([
+            Cart::create([
                 "session_id" => session()->getId(),
                 "product_id" => $product->id,
                 "user_id" => auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null,
-                "price" => $product->productprice->price ? $product->productprice->price : 0,
+                "price" => $product->productprice->price ?: 0,
             ]);
         }
         return response()->json(['status'=>'Успешно добавлена'],201);
@@ -155,12 +156,12 @@ class CartController extends Controller implements CartInterface
      *     )
      */
 
-    public function quantity(Request $request): \Illuminate\Http\JsonResponse
+    public function quantity(Request $request): JsonResponse
     {
         try {
             $cart = Cart::select(['id','quantity'])->where('id',$request->cart_id)->firstOrFail();
         }
-        catch(ModelNotFoundException $exception) {
+        catch(ModelNotFoundException) {
             return response()->json(['status'=>'Корзина не найдена'],403);
         }
         CartQuantity::dispatch($cart,$request->quantity,$request->value);
@@ -195,15 +196,15 @@ class CartController extends Controller implements CartInterface
      */
 
 
-    public function delete(int $id): \Illuminate\Http\JsonResponse
+    public function delete(int $id): JsonResponse
     {
         try {
-            $cart = Cart::where([
+            Cart::where([
                 'session_id'=>session()->getId(),
                 'product_id'=>$id,
                 ])->firstOrFail()->delete();
         }
-        catch(ModelNotFoundException $exception) {
+        catch(ModelNotFoundException) {
             return response()->json(['status'=>'Корзины не существует'],403);
         }
        return response()->json(['status'=>'Товар успешно удален из корзины'],200);
@@ -231,13 +232,13 @@ class CartController extends Controller implements CartInterface
      *     )
      */
 
-    public function clear(): \Illuminate\Http\JsonResponse
+    public function clear(): JsonResponse
     {
         try {
             $cart = Cart::select(['id','session_id'])
                 ->where(["session_id" => session()->getId()])->getOrFail();
         }
-        catch(ModelNotFoundException $exception) {
+        catch(ModelNotFoundException) {
             return response()->json(['status'=>'Нет записей в корзине для удаления'],403);
         }
         $cart->delete();
@@ -263,12 +264,12 @@ class CartController extends Controller implements CartInterface
      */
 
 
-    public function total(): \Illuminate\Http\JsonResponse
+    public function total(): JsonResponse
     {
         try {
             $cart = Cart::select(['id','price','quantity'])->getOrFail();
         }
-        catch(ModelNotFoundException $exception) {
+        catch(ModelNotFoundException) {
             return response()->json(['status'=>'Cart error'],403);
         }
         $sum = $cart->map(function ($item) {

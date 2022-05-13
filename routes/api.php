@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\API\CartController;
 use App\Http\Controllers\API\CategoryController;
-use App\Http\Controllers\API\CentrifugaController;
 use App\Http\Controllers\API\CouponController;
 use App\Http\Controllers\API\CurrencyController;
 use App\Http\Controllers\API\FavoriteController;
@@ -12,7 +11,6 @@ use App\Http\Controllers\API\SubscriptionController;
 use App\Http\Controllers\API\TestController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\VerificationController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*

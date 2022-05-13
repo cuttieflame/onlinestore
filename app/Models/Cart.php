@@ -6,36 +6,76 @@ use Eav\AttributeOption;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\MassPrunable;
-use App\Models\Product;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use League\Csv\Exception;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 
+
+/**
+ * @method static create(array $array)
+ * @method static select(string[] $array)
+ */
 class Cart extends Model
 {
     use HasFactory;
     use MassPrunable;
+
+    /**
+     * @var string[]
+     */
     protected $fillable = ["session_id", "user_id", "product_id", "price", "quantity"];
 
+    /**
+     * @var int[]
+     */
     protected $attributes = [
         "quantity" => 1,
     ];
+    /**
+     * @var string[]
+     */
     protected $casts = [
         'product'=>'array',
     ];
-    public function prunable()
+
+    /**
+     * @return mixed
+     */
+    public function prunable(): mixed
     {
         return static::where('created_at', '<=', now()->subDays(1));
     }
-    public function user() {
+
+    /**
+     * @return BelongsTo
+     */
+    public function user(): BelongsTo
+    {
         return $this->belongsTo('App\Models\User');
     }
-    public function product() {
+
+    /**
+     * @return HasOne
+     */
+    public function product(): HasOne
+    {
         return $this->hasOne('App\Products','id','product_id');
     }
-    public function attributesoptions() {
+
+    /**
+     * @return HasMany
+     */
+    public function attributesoptions(): HasMany
+    {
         return $this->hasMany(AttributeOption::class,'product_id','product_id');
     }
-    public function productprice() {
+
+    /**
+     * @return BelongsTo
+     */
+    public function productprice(): BelongsTo
+    {
         return $this->belongsTo(ProductPrice::class,'product_id','id');
     }
 

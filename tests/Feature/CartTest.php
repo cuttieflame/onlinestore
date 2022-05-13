@@ -10,6 +10,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
+/**
+ *
+ */
 class CartTest extends TestCase
 {
     /**
@@ -20,11 +23,18 @@ class CartTest extends TestCase
 
     //КОРЗИНА НА СЕССИЯХ,ПОЭТОМУ ВЕЗДЕ ОШИБКА 403 БУДЕТ,ТАК КАК НА БЭКЕ СЕССИИ НЕ ПОСТОЯННЫЕ КАК НА ФРОНТЕ
 
+    /**
+     * @return void
+     */
     public function testCartIsShowSuccessfully()
     {
         $this->json('get', "api/v1/cart")
             ->assertStatus(403);
     }
+
+    /**
+     * @return void
+     */
     public function testCartIsAddProductSuccessfully()
     {
         $this->faker = Faker::create();
@@ -41,17 +51,29 @@ class CartTest extends TestCase
         $this->json('post', "api/v1/cart/add/$product_id")
             ->assertStatus(201);
     }
+
+    /**
+     * @return void
+     */
     public function testCartIsChangeQuantityProductSuccessfully()
     {
         $cart = Cart::inRandomOrder()->first();
         $this->json('put', "api/v1/cart/quantity?cart_id=$cart->id&quantity=plus&value=0")
             ->assertStatus(200);
     }
+
+    /**
+     * @return void
+     */
     public function testCartIsClearSuccessfully()
     {
         $this->json('post', "api/v1/cart/clear")
             ->assertStatus(403);
     }
+
+    /**
+     * @return void
+     */
     public function testCartIsDeleteProductSuccessfully()
     {
         $cart = Cart::inRandomOrder(1)->first();

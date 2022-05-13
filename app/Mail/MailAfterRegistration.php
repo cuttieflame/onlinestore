@@ -3,10 +3,12 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
+/**
+ *
+ */
 class MailAfterRegistration extends Mailable
 {
     use Queueable, SerializesModels;
@@ -18,6 +20,9 @@ class MailAfterRegistration extends Mailable
      */
     public $details;
 
+    /**
+     * @param $details
+     */
     public function __construct($details)
     {
         $this->details = $details;
@@ -28,7 +33,7 @@ class MailAfterRegistration extends Mailable
      *
      * @return $this
      */
-    public function build()
+    public function build(): static
     {
         return $this
             ->view('mail.demomail')

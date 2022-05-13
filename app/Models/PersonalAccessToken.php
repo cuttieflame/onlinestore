@@ -7,10 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 use Laravel\Sanctum\PersonalAccessToken as SanctumPersonalAccessToken;
 
 
+/**
+ *
+ */
 class PersonalAccessToken extends Model
 {
     use HasFactory;
-    public function save(array $options = [])
+
+    /**
+     * @param array $options
+     * @return false
+     */
+    public function save(array $options = []): bool
     {
         $changes = $this->getDirty();
         // Проверяем два изменения, так как одно из них это всегда поле updated_at

@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
-use App\Notifications\VerifyNotification;
 use App\Traits\HasRolesAndPermissions;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Cashier\Billable;
@@ -14,6 +16,9 @@ use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
 
 
+/**
+ *
+ */
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens;
@@ -64,20 +69,44 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $appends = [
         'profile_photo_url',
     ];
-    public function account_details() {
+
+    /**
+     * @return HasOne
+     */
+    public function account_details(): HasOne
+    {
         return $this->hasOne('App\Models\AccountDetail','id');
     }
-    public function role_users()
+
+    /**
+     * @return BelongsToMany
+     */
+    public function role_users(): BelongsToMany
     {
         return $this->belongsToMany(Role::class,'role_users');
     }
-    public function role_user() {
+
+    /**
+     * @return HasMany
+     */
+    public function role_user(): HasMany
+    {
         return $this->hasMany(UserRole::class,'user_id');
     }
-    public function permission_user() {
+
+    /**
+     * @return HasMany
+     */
+    public function permission_user(): HasMany
+    {
         return $this->hasMany(UserPermission::class);
     }
-    public function permission() {
+
+    /**
+     * @return BelongsToMany
+     */
+    public function permission(): BelongsToMany
+    {
         return $this->belongsToMany(Permission::class);
     }
 //    public function UserRole() {

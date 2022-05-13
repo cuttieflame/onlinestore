@@ -3,12 +3,14 @@
 namespace App\Jobs;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
+/**
+ *
+ */
 class CartQuantity implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -19,9 +21,21 @@ class CartQuantity implements ShouldQueue
      * @return void
      */
     protected  $cart;
+    /**
+     * @var
+     */
     protected  $quantity;
+    /**
+     * @var
+     */
     protected  $value;
-    public function __construct($cart,$quantity,$value)
+
+    /**
+     * @param $cart
+     * @param $quantity
+     * @param $value
+     */
+    public function __construct($cart, $quantity, $value)
     {
         $this->cart = $cart;
         $this->quantity = $quantity;
