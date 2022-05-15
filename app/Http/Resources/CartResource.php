@@ -10,24 +10,28 @@ class CartResource extends JsonResource
     {
         $name = '';
         $content = '';
-        foreach($this->attributesoptions as $elem) {
-            if($elem->attribute_id == 4) {
-                $name = $elem->value;
-            }
-            if($elem->attribute_id == 5) {
-                $content = $elem->value;
+        if($this->attributesoptions) {
+            foreach ($this->attributesoptions as $elem) {
+                if ($elem->attribute_id == 4) {
+                    $name = $elem->value;
+                }
+                if ($elem->attribute_id == 5) {
+                    $content = $elem->value;
+                }
             }
         }
+        $price = 0;
+        $discount = 0;
         return [
             'id'=>$this->id,
             'session_id'=>$this->session_id,
             'product_id'=>$this->session_id,
             'user_id'=>$this->session_id,
             'quantity'=>$this->quantity,
-            'name'=>$name,
-            'content'=>$content,
-            'price'=>$this->productprice->price,
-            'discount'=>$this->productprice->discount,
+            'name'=>$name ?: 'нет имени',
+            'content'=>$content ?: 'нет имени',
+            'price'=>$this->productprice ? $this->productprice->price : 0,
+            'discount'=>$this->productprice ? $this->productprice->discount : 0,
         ];
     }
 }

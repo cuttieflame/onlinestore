@@ -59,7 +59,7 @@ use Illuminate\Support\Facades\Route;
         Route::get('/',[FavoriteController::class,'get']);
         Route::post('/add/{product_id}',[FavoriteController::class,'add']);
         Route::post('/clear',[FavoriteController::class,'clear']);
-        Route::delete('/delete/{product_id}',[FavoriteController::class,'remove']);
+        Route::delete('/delete/{product_id}',[FavoriteController::class,'delete']);
         Route::get('/total',[FavoriteController::class,'total']);
     });
 

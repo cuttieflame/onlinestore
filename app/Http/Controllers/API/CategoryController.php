@@ -8,17 +8,39 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Products;
 use App\Services\Arr\ArrayServiceInterface;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
+
+/**
+ *
+ */
 class CategoryController extends Controller implements CategoryInterface
 {
+    /**
+     * @var Products
+     */
     private Products $product;
+    /**
+     * @var Brand
+     */
     private Brand $brand;
+    /**
+     * @var Category
+     */
     private Category $category;
+    /**
+     * @var ArrayServiceInterface
+     */
     private ArrayServiceInterface $arrayService;
-    public function __construct(Products $product,Brand $brand,Category $category,ArrayServiceInterface $arrayService)
+
+    /**
+     * @param Products $product
+     * @param Brand $brand
+     * @param Category $category
+     * @param ArrayServiceInterface $arrayService
+     */
+    public function __construct(Products $product, Brand $brand, Category $category, ArrayServiceInterface $arrayService)
     {
         $this->product = $product;
         $this->brand = $brand;
@@ -83,10 +105,9 @@ class CategoryController extends Controller implements CategoryInterface
      */
 
 
-    public function index(Request $request,$id = 0): \Illuminate\Http\JsonResponse
+    public function index(Request $request,$id = 0): JsonResponse
     {
         if($id != 0) {
-            $seconds = 14400;
             $subbrands =  $this->brand->select(['id','name','category_id','categories'])->get();
             $brands = $this->arrayService->makeBrandArray($subbrands,preg_replace('/\D+/', '', $id));
             $builder = $this->product->withAttributeOptions(['pr-price','pr-ctgrs'])
@@ -99,10 +120,10 @@ class CategoryController extends Controller implements CategoryInterface
                 ->with('childrencategories')
                 ->get();
 
-            $max = max($ctgr[0]);
-            $min = min($ctgr[0]);
-
-            $avg = (min($ctgr[0]) + max($ctgr[0])) * 0.5;
+//            $max = max($ctgr[0]);
+//            $min = min($ctgr[0]);
+//
+//            $avg = (min($ctgr[0]) + max($ctgr[0])) * 0.5;
 
             if ($request->has('br') or $request->has('min') or $request->o !== "undefined" and $request->o !== null or $request->has('s') or in_array($request->o, ['pr-in', 'pr-de'])) {
 
@@ -150,7 +171,7 @@ class CategoryController extends Controller implements CategoryInterface
                 });
             $ctgr = $this->arrayService->makeRelatedCategories($builder);
 
-            $avg = (min($ctgr[0]) + max($ctgr[0])) * 0.5;
+//            $avg = (min($ctgr[0]) + max($ctgr[0])) * 0.5;
             if ($request->has('br') or $request->has('pr') or $request->o !== "undefined" and $request->o !== null or $request->has('s') or in_array($request->o, ['pr-in', 'pr-de'])) {
 
                 if($request->br) {

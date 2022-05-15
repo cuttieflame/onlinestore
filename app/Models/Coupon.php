@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  *
+ * @method static get()
  */
 class Coupon extends Model
 {

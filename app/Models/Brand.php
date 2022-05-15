@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  *
+ * @method select(string[] $array)
  */
 class Brand extends Model
 {

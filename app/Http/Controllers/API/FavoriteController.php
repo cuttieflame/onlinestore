@@ -7,9 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\CartCollection;
 use App\Models\Cart;
 use App\Models\Favorite;
-use App\Models\User;
 use App\Products;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\JsonResponse;
 
 /**
  *
@@ -18,11 +18,12 @@ class FavoriteController extends Controller implements FavoriteInterface
 {
     /**
      * @param $id
-     * @return false|\Illuminate\Http\JsonResponse
+     * @return false|JsonResponse
      */
-    public function userFavorites($id = null) {
+    public function userFavorites($id = null): bool|JsonResponse
+    {
 
-        $user_id = $id ? $id : (auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null);
+        $user_id = $id ?: (auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null);
 
         if(is_null($user_id)) {
             return false;
@@ -49,17 +50,27 @@ class FavoriteController extends Controller implements FavoriteInterface
      *     )
      */
 
-    public function get() {
-        try {
-            $products = Favorite::with(['product' => function ($q) {
-                $q->withAttributeOptions(['pr-price']);
-            }])
-                ->where(["session_id" => session()->getId()])
-                ->getOrFail();
+    public function get(): JsonResponse
+    {
+
+        $products = Favorite::with(['product' => function ($q) {
+            $q->withAttributeOptions(['pr-price']);
+        }])
+            ->where(["session_id" => session()->getId()])
+            ->get();
+        if($products->isEmpty()) {
+            try {
+                $products = Favorite::with(['product' => function ($q) {
+                    $q->withAttributeOptions(['pr-price']);
+                }])
+                    ->where(["user_id" => 145])
+                    ->getOrFail();
+            }
+            catch(ModelNotFoundException) {
+                return response()->json(['status'=>'Ошибка'],403);
+            }
         }
-        catch(ModelNotFoundException $exception) {
-            return response()->json(['status'=>'Ошибка'],403);
-        }
+
         return response()->json(['products'=>new CartCollection($products)],200);
     }
     /**
@@ -93,13 +104,14 @@ class FavoriteController extends Controller implements FavoriteInterface
      * )
      */
 
-    public function add(int $product_id) {
+    public function add(int $product_id): JsonResponse
+    {
         try {
             $product = Products::where('id', $product_id)
                 ->with(['productprice'])
                 ->firstOrFail();
         }
-        catch(ModelNotFoundException $exception) {
+        catch(ModelNotFoundException) {
             return response()->json(['status'=>'Нет такого продукта'],403);
         }
         if($cart = Favorite::where([
@@ -109,7 +121,7 @@ class FavoriteController extends Controller implements FavoriteInterface
             $cart->increment("quantity");
             $cart->save();
         } else {
-            $cart = Favorite::create([
+            Favorite::create([
                 "session_id" => session()->getId(),
                 "product_id" => $product->id,
                 "user_id" => auth(config("cart.guard"))->check() ? auth(config("cart.guard"))->id() : null,
@@ -146,16 +158,22 @@ class FavoriteController extends Controller implements FavoriteInterface
      */
 
 
-    public function delete(int $id): \Illuminate\Http\JsonResponse
+    public function delete(int $id): JsonResponse
     {
         try {
-            $favorite = Favorite::findOrFail($id);
+            Favorite::where([
+                'session_id'=>session()->getId(),
+                'product_id'=>$id,
+            ])->orWhere([
+                'user_id'=>auth()->user()->id,
+                'product_id'=>$id
+            ])->firstOrFail()->delete();
         }
-        catch(ModelNotFoundException $exception) {
-            return response()->json(['status'=>'Корзины не существует'],403);
+        catch(ModelNotFoundException) {
+            return response()->json(['status'=>'Нет избранных товаров'],403);
         }
-        $favorite->destroy();
-        return response()->json(['status'=>'Успешно удалена запись'],200);
+        return response()->json(['status'=>'Товар успешно удален из корзины'],200);
+
     }
 
     /**
@@ -177,16 +195,15 @@ class FavoriteController extends Controller implements FavoriteInterface
      */
 
 
-    public function clear(): \Illuminate\Http\JsonResponse
+    public function clear(): JsonResponse
     {
         try {
             $favorite = Favorite::select(['id','session_id'])
-                ->where(["session_id" => session()->getId()])->getOrFail();
+                ->where(["session_id" => session()->getId()])->getOrFail()->each->delete();
         }
-        catch(ModelNotFoundException $exception) {
+        catch(ModelNotFoundException) {
             return response()->json(['status'=>'Нет записей в корзине для удаления'],403);
         }
-        $favorite->delete();
         return response()->json(['status'=>'Корзина очищена'],200);
     }
 
@@ -208,12 +225,12 @@ class FavoriteController extends Controller implements FavoriteInterface
      *     )
      */
 
-    public function total(): \Illuminate\Http\JsonResponse
+    public function total(): JsonResponse
     {
         try {
             $favorite = Favorite::select(['id','price','quantity'])->getOrFail();
         }
-        catch(ModelNotFoundException $exception) {
+        catch(ModelNotFoundException) {
             return response()->json(['status'=>'Cart error'],403);
         }
         $sum = $favorite->map(function ($item) {

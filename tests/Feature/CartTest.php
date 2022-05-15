@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Cart;
 use App\Models\ProductPrice;
+use App\Models\User;
 use App\Products;
 use Faker\Factory as Faker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -28,8 +29,17 @@ class CartTest extends TestCase
      */
     public function testCartIsShowSuccessfully()
     {
+        $user = User::inRandomOrder()->first();
+        $product = Products::inRandomOrder()->first();
+        Cart::factory()->count(1)->create([
+            'user_id'=>$user->id,
+            'session_id'=>session()->getId(),
+            'product_id'=>$product->id
+        ]);
+
+        $this->actingAs($user);
         $this->json('get', "api/v1/cart")
-            ->assertStatus(403);
+            ->assertStatus(200);
     }
 
     /**
@@ -67,8 +77,17 @@ class CartTest extends TestCase
      */
     public function testCartIsClearSuccessfully()
     {
+        $user = User::inRandomOrder()->first();
+        $product = Products::inRandomOrder()->first();
+        Cart::factory()->count(1)->create([
+            'user_id'=>$user->id,
+            'session_id'=>session()->getId(),
+            'product_id'=>$product->id
+        ]);
+
+        $this->actingAs($user);
         $this->json('post', "api/v1/cart/clear")
-            ->assertStatus(403);
+            ->assertStatus(200);
     }
 
     /**
@@ -78,7 +97,16 @@ class CartTest extends TestCase
     {
         $cart = Cart::inRandomOrder(1)->first();
 
-        $this->json('delete', "api/v1/cart/delete/$cart->product_id")
-            ->assertStatus(403);
+        $user = User::inRandomOrder()->first();
+        $product = Products::inRandomOrder()->first();
+        Cart::factory()->count(1)->create([
+            'user_id'=>$user->id,
+            'session_id'=>session()->getId(),
+            'product_id'=>$product->id
+        ]);
+
+        $this->actingAs($user);
+        $this->json('delete', "api/v1/cart/delete/$product->id")
+            ->assertStatus(200);
     }
 }

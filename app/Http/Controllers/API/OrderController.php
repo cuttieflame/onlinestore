@@ -11,9 +11,11 @@ use App\Models\Coupon;
 use App\Models\Order;
 use App\Services\GetIpAdress;
 use App\Services\Order\IOrderManager;
+use App\Services\Stripe\IStripeManager;
 use App\Services\User\UserIndexService;
 use App\Services\User\UserServiceInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\JsonResponse;
 
 /**
  *
@@ -23,20 +25,25 @@ class OrderController extends Controller implements OrderInterface
     /**
      * @var GetIpAdress
      */
-    private $ip;
+    private GetIpAdress $ip;
     /**
      * @var UserServiceInterface
      */
-    private $userService;
+    private UserServiceInterface $userService;
 
+    /**
+     * @var IStripeManager
+     */
+    private IOrderManager $IOrderManager;
     /**
      * @param GetIpAdress $ip
      * @param UserServiceInterface $userService
      */
-    public function __construct(GetIpAdress $ip, UserServiceInterface $userService)
+    public function __construct(GetIpAdress $ip, UserServiceInterface $userService,IOrderManager $IOrderManager)
     {
         $this->ip = $ip;
         $this->userService = $userService;
+        $this->IOrderManager = $IOrderManager;
     }
 
     /**
@@ -75,12 +82,11 @@ class OrderController extends Controller implements OrderInterface
      */
 
 
-    public function makeOrder(OrderRequest $request,int $id): \Illuminate\Http\JsonResponse
+    public function makeOrder(OrderRequest $request,int $id): JsonResponse
     {
         $validated = OrderData::fromRequest($request);
         $address = $this->ip->getIp();
-        $abc = app(IOrderManager::class);
-        $service = $abc->make('order');
+        $service = $this->IOrderManager->make('order');
         try {
             $user = $this->userService->getUser($id);
             $carts = $service->getCarts($user->id);

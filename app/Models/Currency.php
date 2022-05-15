@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * @method get()
+ * @method static byCode(string $currencyCode)
  */
 class Currency extends Model
 {

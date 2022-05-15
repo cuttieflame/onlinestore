@@ -8,6 +8,7 @@ use App\Http\Requests\CouponRequest;
 use App\Models\Coupon;
 use App\Models\Currency;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\JsonResponse;
 
 /**
  *
@@ -38,12 +39,12 @@ class CouponController extends Controller
      */
 
 
-    public function index(): \Illuminate\Http\JsonResponse
+    public function index(): JsonResponse
     {
         try {
             $coupon = Coupon::get();
         }
-        catch(ModelNotFoundException $exception) {
+        catch(ModelNotFoundException) {
             return response()->json(['status'=>'Error'],403);
         }
         return response()->json(['data'=>$coupon],200);
@@ -72,7 +73,7 @@ class CouponController extends Controller
      */
 
 
-    public function store(CouponRequest $request): \Illuminate\Http\JsonResponse
+    public function store(CouponRequest $request): JsonResponse
     {
         $validated = CouponData::fromRequest($request);
         Coupon::create([
@@ -119,13 +120,13 @@ class CouponController extends Controller
      */
 
 
-    public function changeCurrency(string $coupon): \Illuminate\Http\JsonResponse
+    public function changeCurrency(string $coupon): JsonResponse
     {
         session()->forget('currency');
         try {
             $cpn = Coupon::where('code',$coupon)->firstOrFail();
         }
-        catch(ModelNotFoundException $exception) {
+        catch(ModelNotFoundException) {
             return response()->json(['error'=>'Coupon not found'],403);
         }
         $currency = Currency::where('id',$cpn->currency_id)->firstOrFail();

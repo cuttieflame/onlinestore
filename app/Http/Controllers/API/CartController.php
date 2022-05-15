@@ -56,23 +56,24 @@ class CartController extends Controller implements CartInterface
 
     public function get(): JsonResponse
     {
-        try {
             $products = Cart::with(['product' => function ($q) {
                 $q->withAttributeOptions(['pr-price']);
             }])
                 ->where(["session_id" => session()->getId()])
-                ->getOrFail();
-        }
-        catch(CartSessionNotFoundException) {
-            $products = Cart::with(['product' => function ($q) {
-                $q->withAttributeOptions(['pr-price']);
-            }])
-                ->where(["user_id" => auth()->user()->id])
-                ->getOrFail();
-        }
-        catch(ModelNotFoundException) {
-            return response()->json(['status'=>'Ошибка'],403);
-        }
+                ->get();
+            if($products->isEmpty()) {
+                try {
+                    $products = Cart::with(['product' => function ($q) {
+                        $q->withAttributeOptions(['pr-price']);
+                    }])
+                        ->where(["user_id" => auth()->user()->id])
+                        ->getOrFail();
+                }
+                catch(ModelNotFoundException) {
+                    return response()->json(['status'=>'Ошибка'],403);
+                }
+            }
+
         $times = ["now"=>Carbon::now()->format('d.m.Y'),"not_now"=>Carbon::now()->addDays(2)->format('d.m.Y')];
 
    return response()->json(['products'=>new CartCollection($products),'times'=>$times],200);
@@ -164,7 +165,7 @@ class CartController extends Controller implements CartInterface
         catch(ModelNotFoundException) {
             return response()->json(['status'=>'Корзина не найдена'],403);
         }
-        CartQuantity::dispatch($cart,$request->quantity,$request->value);
+        CartQuantity::dispatch($cart,(string)$request->quantity,(int)$request->value);
         return response()->json(['status'=>'Изменено количество'],200);
     }
 
@@ -202,6 +203,9 @@ class CartController extends Controller implements CartInterface
             Cart::where([
                 'session_id'=>session()->getId(),
                 'product_id'=>$id,
+                ])->orWhere([
+                    'user_id'=>auth()->user()->id,
+                    'product_id'=>$id
                 ])->firstOrFail()->delete();
         }
         catch(ModelNotFoundException) {
@@ -235,13 +239,12 @@ class CartController extends Controller implements CartInterface
     public function clear(): JsonResponse
     {
         try {
-            $cart = Cart::select(['id','session_id'])
-                ->where(["session_id" => session()->getId()])->getOrFail();
+           Cart::select(['id','session_id'])->where(["session_id" => session()->getId()])->orWhere(['user_id'=>auth()->user()->id])
+               ->getOrFail()->each->delete();
         }
         catch(ModelNotFoundException) {
             return response()->json(['status'=>'Нет записей в корзине для удаления'],403);
         }
-        $cart->delete();
         return response()->json(['status'=>'Корзина очищена'],200);
     }
 

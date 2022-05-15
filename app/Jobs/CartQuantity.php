@@ -1,7 +1,8 @@
 <?php
-
+declare(strict_types=1);
 namespace App\Jobs;
 
+use App\Models\Cart;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -20,15 +21,15 @@ class CartQuantity implements ShouldQueue
      *
      * @return void
      */
-    protected  $cart;
+    protected Cart $cart;
     /**
      * @var
      */
-    protected  $quantity;
+    protected string $quantity;
     /**
      * @var
      */
-    protected  $value;
+    protected int  $value;
 
     /**
      * @param $cart

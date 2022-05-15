@@ -17,6 +17,8 @@ use App\Services\Images\ImageService;
 use App\Services\Images\ImageServiceInterface;
 use App\Services\Product\ProductService;
 use App\Services\Product\ProductServiceInterface;
+use App\Services\Stripe\IStripeManager;
+use App\Services\Stripe\StripeManager;
 use App\Services\Test\DemoOne;
 use App\Services\Test\DemoOneInterface;
 use App\Services\User\UserService;
@@ -31,8 +33,8 @@ class AppServiceProvider extends ServiceProvider
         Sanctum::usePersonalAccessTokenModel(
             PersonalAccessToken::class
         );
-        $this->app->bind(\App\Services\Stripe\IStripeManager::class, function ($app) {
-            return new \App\Services\Stripe\StripeManager($app);
+        $this->app->bind(IStripeManager::class, function ($app) {
+            return new StripeManager($app);
         });
         $this->app->bind(\App\Services\Order\IOrderManager::class, function ($app) {
             return new \App\Services\Order\OrderManager($app);

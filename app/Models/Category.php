@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @method select(string[] $array)
+ * @method whereIn(string $string, array $array_unique)
  */
 class Category extends Model
 {

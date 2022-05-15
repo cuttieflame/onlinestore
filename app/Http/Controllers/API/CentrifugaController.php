@@ -35,7 +35,7 @@ class CentrifugaController extends Controller
     /**
      * @param Centrifugo $centrifugo
      * @param Request $request
-     * @param $id
+     * @param int $id
      * @return JsonResponse
      */
     public function example(Centrifugo $centrifugo, Request $request,int $id): JsonResponse

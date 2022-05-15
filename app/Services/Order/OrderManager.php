@@ -4,7 +4,7 @@ namespace App\Services\Order;
 
 use App\Services\Stripe\StripeService;
 
-class OrderManager
+class OrderManager implements IOrderManager
 {
     private $shops = [];
     private $app;

@@ -2,19 +2,20 @@
 
 namespace App\Services\Stripe;
 
-use Stripe\Stripe;
+use Illuminate\Support\Arr;
 
-class StripeManager
+class StripeManager implements IStripeManager
 {
-    private $shops = [];
-    private $app;
-    public function __construct($app)
-    {
-        $this->app = $app;
-    }
+    private array $shops = [];
+
+    /**
+     * @param $name
+     * @return IStripeService
+     * @throws \Exception
+     */
     public function make($name): IStripeService
     {
-        $service = \Arr::get($this->shops, $name);
+        $service = Arr::get($this->shops, $name);
         // No need to create the service every time
         if ($service) {
             return $service;
