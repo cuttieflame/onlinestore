@@ -2,7 +2,7 @@
 
 namespace App\Contracts;
 
-interface CustomServiceInterface
+abstract class CustomServiceInterface
 {
-    public function doSomethingUseful();
+    abstract public function doSomethingUseful();
 }

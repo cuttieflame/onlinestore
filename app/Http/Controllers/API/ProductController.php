@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Contracts\ProductInterface;
 use App\DataTransferObjects\ProductData;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CouponRequest;
 use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\UploadProductImageRequest;
 use App\Http\Resources\ProductCollection;
@@ -111,6 +112,12 @@ class ProductController extends Controller implements ProductInterface
      *      )
      *     )
      */
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+
     public function index(Request $request): JsonResponse
     {
         try {
@@ -164,6 +171,11 @@ class ProductController extends Controller implements ProductInterface
      */
 
 
+    /**
+     * @param int $id
+     * @param Request $request
+     * @return JsonResponse
+     */
 
     public function userProduct(int $id,Request $request): JsonResponse
     {
@@ -228,8 +240,12 @@ class ProductController extends Controller implements ProductInterface
      *          description="Forbidden"
      *      )
      * )
-     * @throws UnknownProperties
-     * @throws Exception
+     *
+     */
+
+    /**
+     * @param ProductStoreRequest $request
+     * @return JsonResponse
      */
 
     public function store(ProductStoreRequest $request): JsonResponse
@@ -332,6 +348,11 @@ class ProductController extends Controller implements ProductInterface
      * )
      */
 
+    /**
+     * @param UploadProductImageRequest $request
+     * @return JsonResponse
+     */
+
     public function uploadProductImage(UploadProductImageRequest $request,int $id): JsonResponse
     {
         $file = $this->imageService->InvertionImage($request->file('file'));
@@ -370,6 +391,11 @@ class ProductController extends Controller implements ProductInterface
      *          description="Forbidden"
      *      )
     *       )
+     */
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
      */
 
     public function delete(Request $request): JsonResponse

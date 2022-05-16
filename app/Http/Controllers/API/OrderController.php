@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Contracts\OrderInterface;
 use App\DataTransferObjects\OrderData;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CouponRequest;
 use App\Http\Requests\OrderRequest;
 use App\Models\Cart;
 use App\Models\Coupon;
@@ -81,6 +82,11 @@ class OrderController extends Controller implements OrderInterface
      * )
      */
 
+    /**
+     * @param OrderRequest $request
+     * @param int $id
+     * @return JsonResponse
+     */
 
     public function makeOrder(OrderRequest $request,int $id): JsonResponse
     {

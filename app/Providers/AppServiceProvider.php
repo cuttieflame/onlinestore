@@ -21,6 +21,8 @@ use App\Services\Stripe\IStripeManager;
 use App\Services\Stripe\StripeManager;
 use App\Services\Test\DemoOne;
 use App\Services\Test\DemoOneInterface;
+use App\Services\Test\DemoTwo;
+use App\Services\Test\DemoTwoInterface;
 use App\Services\User\UserService;
 use App\Services\User\UserServiceInterface;
 use Illuminate\Support\ServiceProvider;
@@ -44,6 +46,9 @@ class AppServiceProvider extends ServiceProvider
 //        });
         $this->app->singleton(DemoOneInterface::class,function($app) {
             return new DemoOne();
+        });
+        $this->app->singleton(DemoTwoInterface::class,function($app) {
+            return new DemoTwo();
         });
         $this->app->bind(ArrayServiceInterface::class, ArrayService::class);
         $this->app->bind(ImageServiceInterface::class, ImageService::class);

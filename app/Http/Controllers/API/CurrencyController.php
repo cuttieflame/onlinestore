@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Contracts\CurrencyInterface;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CouponRequest;
 use App\Models\Currency;
 use App\Services\Currency\CurrencyRates;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -46,6 +47,10 @@ class CurrencyController extends Controller implements CurrencyInterface
      *     )
      */
 
+    /**
+     * @param string $currencyCode
+     * @return JsonResponse
+     */
 
     public function changeCurrency(string $currencyCode): JsonResponse
     {

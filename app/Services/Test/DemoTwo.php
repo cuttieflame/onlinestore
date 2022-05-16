@@ -2,12 +2,13 @@
 
 namespace App\Services\Test;
 
-use App\Contracts\CustomServiceInterface;
 
-class DemoTwo implements CustomServiceInterface
+class DemoTwo
 {
-public function doSomethingUseful()
-{
-    return 'Output from DemoTwo';
-}
+    public static function who() {
+        echo '123';
+    }
+    public static function test() {
+        static::who();
+    }
 }

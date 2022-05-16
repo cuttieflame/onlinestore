@@ -9,6 +9,7 @@ use App\Models\Coupon;
 use App\Models\Currency;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  *
@@ -72,6 +73,10 @@ class CouponController extends Controller
      * )
      */
 
+    /**
+     * @param CouponRequest $request
+     * @return JsonResponse
+     */
 
     public function store(CouponRequest $request): JsonResponse
     {
@@ -117,6 +122,11 @@ class CouponController extends Controller
      *          description="Coupon not found",
      *      )
      *     )
+     */
+
+    /**
+     * @param string $coupon
+     * @return JsonResponse
      */
 
 

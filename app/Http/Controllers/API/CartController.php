@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers\API;
 
 use App\Contracts\CartInterface;
-use App\Exceptions\CartSessionNotFoundException;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CartCollection;
 use App\Jobs\CartQuantity;
@@ -111,6 +110,11 @@ class CartController extends Controller implements CartInterface
      */
 
 
+    /**
+     * @param int $product_id
+     * @return JsonResponse
+     */
+
     public function add(int $product_id): JsonResponse
     {
         try {
@@ -157,6 +161,11 @@ class CartController extends Controller implements CartInterface
      *     )
      */
 
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+
     public function quantity(Request $request): JsonResponse
     {
         try {
@@ -196,6 +205,10 @@ class CartController extends Controller implements CartInterface
      *     )
      */
 
+    /**
+     * @param int $id
+     * @return JsonResponse
+     */
 
     public function delete(int $id): JsonResponse
     {

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Requests\CouponRequest;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Auth\Events\Verified;
@@ -30,6 +32,12 @@ class VerificationController extends Controller
      *          description="Forbidden"
      *      )
      * )
+     */
+
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
      */
 
     public function sendVerificationEmail(Request $request): \Illuminate\Http\JsonResponse
@@ -78,6 +86,10 @@ class VerificationController extends Controller
      * )
      */
 
+    /**
+     * @param EmailVerificationRequest $request
+     * @return JsonResponse
+     */
 
     public function verify(EmailVerificationRequest $request): \Illuminate\Http\JsonResponse
     {

@@ -104,6 +104,11 @@ class CategoryController extends Controller implements CategoryInterface
      *     )
      */
 
+    /**
+     * @param Request $request
+     * @param int $id
+     * @return JsonResponse
+     */
 
     public function index(Request $request,$id = 0): JsonResponse
     {

@@ -6,6 +6,7 @@ namespace App\Http\Controllers\API;
 use App\Contracts\UserInterface;
 use App\DataTransferObjects\UserData;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CouponRequest;
 use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\UpdateImageRequest;
 use App\Http\Requests\UserAccountRequest;
@@ -16,6 +17,7 @@ use App\Services\Images\ImageService;
 use App\Services\User\UserIndexService;
 use App\Services\User\UserServiceInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
@@ -56,6 +58,12 @@ class UserController extends Controller implements UserInterface
      *     )
      */
 
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+
     public function index(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
@@ -93,6 +101,12 @@ class UserController extends Controller implements UserInterface
      *          description="User not found",
      *      )
      *     )
+     */
+
+    /**
+     * @param UserAccountRequest $request
+     * @param int $id
+     * @return JsonResponse
      */
 
     public function update(UserAccountRequest $request,int $id): \Illuminate\Http\JsonResponse
@@ -144,6 +158,11 @@ class UserController extends Controller implements UserInterface
      *     )
      */
 
+    /**
+     * @param UpdateImageRequest $request
+     * @param int $id
+     * @return JsonResponse
+     */
 
     public function updateImage(UpdateImageRequest $request,int $id): \Illuminate\Http\JsonResponse
     {
@@ -185,6 +204,11 @@ class UserController extends Controller implements UserInterface
      *          description="User not found",
      *      )
      *     )
+     */
+
+    /**
+     * @param int $id
+     * @return JsonResponse
      */
 
     public function destroy(int $id): \Illuminate\Http\JsonResponse
@@ -230,6 +254,10 @@ class UserController extends Controller implements UserInterface
      *     )
      */
 
+    /**
+     * @param ResetPasswordRequest $request
+     * @return JsonResponse
+     */
 
     public function resetPassword(ResetPasswordRequest $request): \Illuminate\Http\JsonResponse
     {

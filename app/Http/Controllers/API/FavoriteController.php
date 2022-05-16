@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Contracts\FavoriteInterface;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CouponRequest;
 use App\Http\Resources\CartCollection;
 use App\Models\Cart;
 use App\Models\Favorite;
@@ -20,6 +21,7 @@ class FavoriteController extends Controller implements FavoriteInterface
      * @param $id
      * @return false|JsonResponse
      */
+
     public function userFavorites($id = null): bool|JsonResponse
     {
 
@@ -104,6 +106,11 @@ class FavoriteController extends Controller implements FavoriteInterface
      * )
      */
 
+    /**
+     * @param int $product_id
+     * @return JsonResponse
+     */
+
     public function add(int $product_id): JsonResponse
     {
         try {
@@ -157,6 +164,10 @@ class FavoriteController extends Controller implements FavoriteInterface
      *     )
      */
 
+    /**
+     * @param int $id
+     * @return JsonResponse
+     */
 
     public function delete(int $id): JsonResponse
     {

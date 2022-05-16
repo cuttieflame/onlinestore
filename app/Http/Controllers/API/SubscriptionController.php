@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 
 use App\Contracts\SubscriptionInterface;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CouponRequest;
 use App\Http\Resources\CustomerBillingCollection;
 use App\Models\Payment;
 use App\Models\Subscription;
@@ -15,6 +16,7 @@ use App\Services\PaymentMethodService;
 use App\Services\Stripe\IStripeManager;
 use App\Services\User\UserServiceInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -103,6 +105,7 @@ class SubscriptionController extends Controller implements SubscriptionInterface
      * @return \Illuminate\Http\JsonResponse|void
      * @throws \Stripe\Exception\ApiErrorException
      */
+
     public function webhook(Request $request)
     {
         $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
@@ -202,6 +205,11 @@ class SubscriptionController extends Controller implements SubscriptionInterface
      *     )
      */
 
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+
     public function getAllProducts(Request $request): \Illuminate\Http\JsonResponse
     {
         $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
@@ -290,6 +298,12 @@ class SubscriptionController extends Controller implements SubscriptionInterface
      * )
      */
 
+    /**
+     * @param int $id
+     * @param Request $request
+     * @return JsonResponse
+     */
+
     public function addCustomer(int $id,Request $request) {
         try {
             $user = $this->userService->getUser($id);
@@ -346,6 +360,11 @@ class SubscriptionController extends Controller implements SubscriptionInterface
      *          description="User not found",
      *      )
      *     )
+     */
+
+    /**
+     * @param int $id
+     * @return JsonResponse
      */
 
     public function getProducts(int $id) {
